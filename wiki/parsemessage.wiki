@@ -12,7 +12,7 @@
   send_message(fd, message)这个是可以指定用户发消息<br />
   send_message_all(message)这个是给所有在线用户发消息<br />
   fd 是整形<br />
-  message格式：&amp;lt;event type=&quot;&quot;&amp;gt;&amp;lt;/event&amp;gt;<br />
+  message格式：{{{<event type=''></event>}}}<br />
   type系统已经定义的有：<br />
   EV_TYPE_PING:String = '0';<br />
   EV_TYPE_AUTH:String = '10';<br />
