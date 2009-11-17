@@ -1,7 +1,14 @@
 #labels 服务端环境安装
 安装MysqlClient
+
 Ubuntu：
     sudo apt-get install mysql-client-5
 
+安装SSL:
+
+Ubuntu：
+    sudo apt-get install ssl
+
 拷贝服务端程序到服务器上，然后运行：
+
     sudo ./myleftchat.bin &
