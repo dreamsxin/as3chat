@@ -3,7 +3,7 @@
   ///////////////<br />
   例：<br />
   --解析消息和发送<br />
-  --可以调用的主要函数send_message(fd, message)/send_message_all(message)/get_fd_byname<br />
+  --可以调用的主要函数send_message(fd, message)/send_message_all(message)/get_fd_byname/socket_close<br />
   function parsemessage(fd, message)<br />
   print(fd, message);<br />
   send_message(fd, message);<br />
@@ -11,6 +11,7 @@
 <p>在parsemessage函数里，可以自己对message字符串进行解析，然后根据需求进行发送消息<br />
   send_message(fd, message)这个是可以指定用户发消息<br />
   send_message_all(message)这个是给所有在线用户发消息<br />
+  socket_close(fd)关闭一个用户连接<br />
   fd 是整形<br />
   message格式：{{{<event type=''></event>}}}<br />
   type系统已经定义的有：<br />
