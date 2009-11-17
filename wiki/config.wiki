@@ -1,32 +1,30 @@
 #labels 服务端配置
-服务端配置
-//////////////////
-config.conf
-
-   服务器端口
-   数据库连接
-   用户表字段等信息
-例：
---端口
-port = 8222
---进程数，最大为50个进程，
-pthread = 5
---数据库验证
-dbhost = "localhost"
-dbport = 3306
-dbuser = "root"
-dbpass = ""
-dbname = "ucenter"
-dbtable = "uc_members"
-fieldusername = "username"
-fieldpassword = "password"
-fieldsalt = "salt"
-/////////////////
-account.conf
-
-加密串认证信息
-例：
---账户列表
-myleft = "myleft"
-doris = "doris7"
-////////////////////
+<p>服务端配置<br />
+  //////////////////<br />
+  config.conf</p>
+<p> 服务器端口<br />
+  数据库连接<br />
+  用户表字段等信息<br />
+  例：<br />
+  --端口<br />
+  port = 8222<br />
+  --进程数，最大为50个进程，<br />
+  pthread = 5<br />
+  --数据库验证<br />
+  dbhost = &quot;localhost&quot;<br />
+  dbport = 3306<br />
+  dbuser = &quot;root&quot;<br />
+  dbpass = &quot;&quot;<br />
+  dbname = &quot;ucenter&quot;<br />
+  dbtable = &quot;uc_members&quot;<br />
+  fieldusername = &quot;username&quot;<br />
+  fieldpassword = &quot;password&quot;<br />
+  fieldsalt = &quot;salt&quot;<br />
+  /////////////////<br />
+  account.conf</p>
+<p>加密串认证信息<br />
+  例：<br />
+  --账户列表<br />
+  myleft = &quot;myleft&quot;<br />
+  doris = &quot;doris7&quot;<br />
+  ////////////////////</p>
