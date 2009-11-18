@@ -25,6 +25,5 @@
 <p>加密串认证信息<br />
   例：<br />
   --账户列表<br />
-  myleft = "myleft"<br />
-  doris = "doris7"<br />
+  mysite = "site "<br />
   ////////////////////</p>
