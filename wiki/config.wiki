@@ -11,20 +11,20 @@
   --进程数，最大为50个进程，<br />
   pthread = 5<br />
   --数据库验证<br />
-  dbhost = &quot;localhost&quot;<br />
+  dbhost = "localhost"<br />
   dbport = 3306<br />
-  dbuser = &quot;root&quot;<br />
-  dbpass = &quot;&quot;<br />
-  dbname = &quot;ucenter&quot;<br />
-  dbtable = &quot;uc_members&quot;<br />
-  fieldusername = &quot;username&quot;<br />
-  fieldpassword = &quot;password&quot;<br />
-  fieldsalt = &quot;salt&quot;<br />
+  dbuser = "root"<br />
+  dbpass =""<br />
+  dbname = "ucenter"<br />
+  dbtable = "uc_members"<br />
+  fieldusername = "username"<br />
+  fieldpassword = "password"<br />
+  fieldsalt = "salt"<br />
   /////////////////<br />
   account.conf</p>
 <p>加密串认证信息<br />
   例：<br />
   --账户列表<br />
-  myleft = &quot;myleft&quot;<br />
-  doris = &quot;doris7&quot;<br />
+  myleft = "myleft"<br />
+  doris = "doris7"<br />
   ////////////////////</p>
