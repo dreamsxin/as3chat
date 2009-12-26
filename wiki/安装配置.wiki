@@ -13,3 +13,33 @@ Ubuntu：
 最后拷贝服务端程序到服务器上，然后运行：
 
     sudo ./myleftchat.bin &
+
+#labels 服务端配置
+<p>服务端配置<br />
+  //////////////////<br />
+  config.conf</p>
+<p> 服务器端口<br />
+  数据库连接<br />
+  用户表字段等信息<br />
+  例：<br />
+  --端口<br />
+  port = 8222<br />
+  --进程数，最大为50个进程，<br />
+  pthread = 5<br />
+  --数据库验证<br />
+  dbhost = "localhost"<br />
+  dbport = 3306<br />
+  dbuser = "root"<br />
+  dbpass =""<br />
+  dbname = "ucenter"<br />
+  dbtable = "uc_members"<br />
+  fieldusername = "username"<br />
+  fieldpassword = "password"<br />
+  fieldsalt = "salt"<br />
+  /////////////////<br />
+  account.conf</p>
+<p>加密串认证信息<br />
+  例：<br />
+  --账户列表<br />
+  mysite = "site "<br />
+  ////////////////////</p>
