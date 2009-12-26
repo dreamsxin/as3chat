@@ -1,20 +1,15 @@
-#labels 服务端环境安装
-如果没有Mysql client和SSL的服务器需要先安装这两个库。
-安装MysqlClient
+#labels 服务端安装配置
+<p>安装服务端</p>
+安装Mysql client和SSL
 
 Ubuntu：
     sudo apt-get install mysql-client-5
-
-安装SSL:
-
-Ubuntu：
     sudo apt-get install ssl
 
-最后拷贝服务端程序到服务器上，然后运行：
+启动服务端：
 
     sudo ./myleftchat.bin &
 
-#labels 服务端配置
 <p>服务端配置<br />
   //////////////////<br />
   config.conf</p>
