@@ -1,5 +1,6 @@
 package org.myleft.core
 {
+	import flash.system.Security;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.IEventDispatcher;
@@ -50,13 +51,24 @@ package org.myleft.core
 		{       
 			
 			//if((new Date().getTime() - lastSendTime > 15000))
-			if ( socket.connected ) this.sendKeepAlive();
+			if ( socket.connected ) {			
+				this.sendKeepAlive();
+			}
+			else
+			{
+				keepAlive.stop();
+				
+				var e:SocketConnectionEvent;
+				e = new SocketConnectionEvent(Define.CLOSE);
+				dispatchEvent( e );
+			}
 			
 		}
 
 		
 		public function connect(host:String, port:int):void
 		{
+			Security.loadPolicyFile("xmlsocket://"+host+":"+port.toString());
 			this.host = host;
 			this.port = port;
 			socket.connect(this.host, this.port);

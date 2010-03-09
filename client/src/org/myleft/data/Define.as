@@ -26,5 +26,8 @@ package org.myleft.data
 		public static const EV_TYPE_CHANGE_ROOM:String = '40';
 		public static const EV_TYPE_GET_ROOM_LIST:String = '41';
 		public static const EV_TYPE_ROOM_ADD:String = '42';
+		
+		public static const EV_TYPE_ADMIN_COMMAND_GOOUT:String = '90';
+		public static const EV_TYPE_ADMIN_COMMAND_SHUTUP:String = '91';
 	}
 }
