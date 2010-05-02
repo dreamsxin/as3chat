@@ -42,7 +42,7 @@ package org.myleft.core
 			
 			socket.addEventListener(ProgressEvent.SOCKET_DATA, socketDataFunction);
 			
-			keepAlive = new Timer(100000);
+			keepAlive = new Timer(10000);
   			keepAlive.addEventListener(TimerEvent.TIMER, onKeepAliveLoop);
 
 		}
