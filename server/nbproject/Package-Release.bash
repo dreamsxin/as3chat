@@ -6,12 +6,14 @@
 
 # Macros
 TOP=`pwd`
-PLATFORM=Cygwin-Windows
-TMPDIR=build/Release/${PLATFORM}/tmp-packaging
+CND_PLATFORM=GNU-Linux-x86
+CND_CONF=Release
+CND_DISTDIR=dist
+TMPDIR=build/${CND_CONF}/${CND_PLATFORM}/tmp-packaging
 TMPDIRNAME=tmp-packaging
-OUTPUT_PATH=dist/Release/${PLATFORM}/myleftchat3
-OUTPUT_BASENAME=myleftchat3
-PACKAGE_TOP_DIR=myleftchat3/
+OUTPUT_PATH=${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/myleftchatv3
+OUTPUT_BASENAME=myleftchatv3
+PACKAGE_TOP_DIR=myleftchatv3/
 
 # Functions
 function checkReturnCode
@@ -50,21 +52,21 @@ function copyFileToTmpDir
 
 # Setup
 cd "${TOP}"
-mkdir -p dist/Release/${PLATFORM}/package
+mkdir -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package
 rm -rf ${TMPDIR}
 mkdir -p ${TMPDIR}
 
 # Copy files and create directories and links
 cd "${TOP}"
-makeDirectory ${TMPDIR}/myleftchat3/bin
+makeDirectory ${TMPDIR}/myleftchatv3/bin
 copyFileToTmpDir "${OUTPUT_PATH}.exe" "${TMPDIR}/${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}.exe" 0755
 
 
 # Generate tar file
 cd "${TOP}"
-rm -f dist/Release/${PLATFORM}/package/myleftchat3.tar
+rm -f ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/myleftchatv3.tar
 cd ${TMPDIR}
-tar -vcf ../../../../dist/Release/${PLATFORM}/package/myleftchat3.tar *
+tar -vcf ../../../../${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/myleftchatv3.tar *
 checkReturnCode
 
 # Cleanup

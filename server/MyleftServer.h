@@ -61,6 +61,9 @@ extern "C" {
 #define EV_TYPE_ADMIN_COMMAND_GOOUT 90
 #define EV_TYPE_ADMIN_COMMAND_SHUTUP 91
 
+//特殊
+#define EV_TYPE_MOVE 100
+
 //状态
 #define FD_STATE_NONE 0
 #define FD_STATE_WAIT 1
@@ -89,9 +92,11 @@ extern "C" {
     //声明epoll_event结构体的变量,ev用于注册事件,数组用于回传要处理的事件
     struct epoll_event ev, events[MAX_EVENTS];
 
+    pthread_t t_heartbeat;
     pthread_t tid[T_MAX];
     int t_num; //线程数
     pthread_mutex_t t_mutex;
+    pthread_mutex_t hashlock;
     pthread_cond_t t_cond;
     //需要处理的任务列表
 
@@ -113,6 +118,9 @@ extern "C" {
         int state;
         int type;
         int anonymous;
+        int x;
+        int y;
+        int keepalivetime;
         char *username; //用户名
         struct clients *next;
     } clients;
@@ -136,6 +144,10 @@ extern "C" {
         int listen_sockfd;
         struct sockaddr_in listen_addr;
     } server;
+
+    //时间
+    time_t mytimestamp;
+    struct tm *p;
 
     //数据库
     MYSQL *conn;
@@ -167,6 +179,7 @@ extern "C" {
     void destory();
 
     //function
+    void *heartbeat(void *args);
     char *strescape(const char *buf);
     void md5(const char *str, char *dec);
     int evutil_make_socket_nonblocking(int fd);

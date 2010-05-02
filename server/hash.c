@@ -50,7 +50,10 @@ hash_item *hash_search(char *key) {
 }
 
 int hash_add(hash_item *item) {
+    int ret = 0;
     if (item != NULL) {
+        pthread_mutex_lock(&hashlock);
+
         log_write(LOG_ERR, "hash_add", __FILE__, __LINE__);
         unsigned int index = BKDRHash(item->key) % hash_size;
         hash_item *found_item = hash_table[index];
@@ -71,14 +74,20 @@ int hash_add(hash_item *item) {
         } else {
             hash_table[index] = item;
         }
-        return 1;
+
+        pthread_mutex_unlock(&hashlock);
+        ret = 1;
     }
-    return 0;
+    return ret;
 }
 
 int hash_del(char *key) {
-    log_write(LOG_ERR, "hash_del", __FILE__, __LINE__);
-    if (key == NULL) return 0;
+    int ret = 0;
+    if (key == NULL) {
+        log_write(LOG_ERR, "hash_del key == NULL", __FILE__, __LINE__);
+        return ret;
+    }
+    pthread_mutex_lock(&hashlock);
     log_write(LOG_ERR, "hash_del1", __FILE__, __LINE__);
     unsigned int index = BKDRHash(key) % hash_size;
     hash_item *item = hash_table[index];
@@ -92,12 +101,14 @@ int hash_del(char *key) {
                 hash_table[index] = item->next;
             }
             free(item);
-            return 1;
+            ret = 1;
+            break;
         }
 
         prev = item;
         item = item->next;
     }
+    pthread_mutex_unlock(&hashlock);
     log_write(LOG_ERR, "hash_del end", __FILE__, __LINE__);
-    return 1;
+    return ret;
 }

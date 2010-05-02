@@ -24,7 +24,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=myleftchat3
+PROJECTNAME=myleftchatV3
 
 # Active Configuration
 DEFAULTCONF=Debug

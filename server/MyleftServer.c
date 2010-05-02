@@ -18,7 +18,6 @@
  */
 int main() {
     t_min = 5;
-    t_num = 0;
 
     port = 5222;
 
@@ -116,9 +115,14 @@ int main() {
     epoll_ctl(epfd, EPOLL_CTL_ADD, s.listen_sockfd, &ev);
 
     pthread_mutex_init(&t_mutex, NULL);
+    pthread_mutex_init(&hashlock, NULL);
     pthread_cond_init(&t_cond, NULL);
 
+    //开启心跳线程heartbeat
+    pthread_create(&t_heartbeat, NULL, heartbeat, NULL);
+
     //初始化任务线程，开启两个线程来完成任务，线程之间会互斥地访问任务链表
+    t_num = 0;
     while (t_num < t_min && t_num < T_MAX) {
         t_num++;
         pthread_create(&tid[t_num], NULL, readtask, NULL);
@@ -131,6 +135,9 @@ int main() {
         nfds = epoll_wait(epfd, events, MAX_EVENTS, 3000);
         //处理所发生的所有事件
         for (i = 0; i < nfds; ++i) {
+            time(&mytimestamp);
+            p = gmtime(&mytimestamp);
+            printf("fd:%d, file:%s, line:%d\n", events[i].data.fd, __FILE__, __LINE__);
             if (events[i].data.fd == s.listen_sockfd) {//主socket
                 client_fd = accept(s.listen_sockfd, (struct sockaddr *) & client_addr, &client_len);
                 if (client_fd < 0) {
@@ -138,18 +145,21 @@ int main() {
                 }
 
                 evutil_make_socket_nonblocking(client_fd);
-                
+
                 clients *node = (clients *) malloc(sizeof (clients));
                 node->fd = client_fd;
                 node->roomid = 0;
                 node->state = FD_STATE_WAIT;
                 node->type = CLIENT_TYPE_NONE;
                 node->anonymous = 1;
+                node->x = 1;
+                node->y = 1;
+                node->keepalivetime = mytimestamp;
                 node->username = (char *) malloc(MAX_CHAR_LENGTH * sizeof (char));
                 node->next = NULL;
                 fd_clients[client_fd] = node;
 
-                
+
                 ev.events = EPOLLIN | EPOLLET;
                 ev.data.fd = client_fd;
                 epoll_ctl(epfd, EPOLL_CTL_ADD, client_fd, &ev);
@@ -162,9 +172,14 @@ int main() {
                     continue;
                 }
                 client_fdnode = fd_clients[events[i].data.fd];
+                if (client_fdnode==NULL) {
+                    events[i].data.fd = -1;
+                    close(events[i].data.fd);
+                }
+                client_fdnode->keepalivetime = mytimestamp;
                 recv_bits = read(events[i].data.fd, msgbuffer, sizeof (msgbuffer));
                 if (recv_bits <= 0) {
-                    log_write(LOG_DEBUG, "recv_bits<=0 超时或者", __FILE__, __LINE__);
+                    printf("recv_bits:%d, file:%s, line:%d\n", recv_bits, __FILE__, __LINE__);
                     logout = 1;
 
                     events[i].data.fd = -1;
@@ -182,10 +197,11 @@ int main() {
                         continue; //退出
                     }
                 } else if (strncmp(msgbuffer, PING, sizeof (PING)) == 0) {
+                    client_fdnode->keepalivetime = mytimestamp;
                     log_write(LOG_DEBUG, "PING", __FILE__, __LINE__);
-                    //send_message(fd, "<event type='0'/>");
+                    send_message(client_fdnode->fd, "<event type='0'/>");
                     continue; //退出
-                }  else if (strncmp(msgbuffer, QUIT, sizeof (QUIT)) == 0) {
+                } else if (strncmp(msgbuffer, QUIT, sizeof (QUIT)) == 0) {
                     log_write(LOG_DEBUG, "QUIT", __FILE__, __LINE__);
                     logout = 1;
 
@@ -225,9 +241,14 @@ int main() {
                         }
                         temp_task->next = new_task;
                     }
-                    log_write(LOG_DEBUG, "唤醒所有等待cond1条件的线程", __FILE__, __LINE__);
-                    //唤醒所有等待cond1条件的线程
-                    pthread_cond_broadcast(&t_cond);
+					//唤醒其中一个线程即可
+					log_write(LOG_DEBUG, "唤醒所有等待cond1条件的线程", __FILE__, __LINE__);
+					pthread_cond_signal(&t_cond);
+
+					//唤醒所有等待cond1条件的线程
+                    //log_write(LOG_DEBUG, "唤醒所有等待cond1条件的线程", __FILE__, __LINE__);
+                    //pthread_cond_broadcast(&t_cond);
+
                     pthread_mutex_unlock(&t_mutex);
                 }
             } else if (events[i].events & EPOLLOUT) {
@@ -241,6 +262,38 @@ int main() {
                 ev.events = EPOLLIN | EPOLLET;
                 //修改sockfd上要处理的事件为EPOLIN
                 epoll_ctl(epfd, EPOLL_CTL_MOD, events[i].data.fd, &ev);
+            } else if (events[i].events & EPOLLRDHUP) {//tcp连接中断检测
+                if (events[i].data.fd < 0) {
+                    continue;
+                }
+
+                client_fdnode = fd_clients[events[i].data.fd];
+                if (client_fdnode==NULL) {
+                    events[i].data.fd = -1;
+                    close(events[i].data.fd);
+                }
+                log_write(LOG_DEBUG, "EPOLLRDHUP 对方断开", __FILE__, __LINE__);
+
+                events[i].data.fd = -1;
+                node_del(client_fdnode);
+                continue;
+
+            } else if (events[i].events & EPOLLERR) {//tcp连接中断检测
+                if (events[i].data.fd < 0) {
+                    continue;
+                }
+
+                client_fdnode = fd_clients[events[i].data.fd];
+                if (client_fdnode==NULL) {
+                    events[i].data.fd = -1;
+                    close(events[i].data.fd);
+                }
+                log_write(LOG_DEBUG, "EPOLLERR 对方断开", __FILE__, __LINE__);
+
+                events[i].data.fd = -1;
+                node_del(client_fdnode);
+                continue;
+
             } else {
                 perror("other event");
             }
@@ -256,6 +309,14 @@ int main() {
 //注销程序
 
 void destory() {
+    pthread_cancel(&t_heartbeat);
+    for (t_num; t_num>0; t_num--) {
+        pthread_cancel(&tid[t_num]);
+    }
+    
+    pthread_mutex_destroy(&t_mutex);
+    pthread_mutex_destroy(&hashlock);
+    pthread_cond_destroy(&t_cond);
     db_close();
     hash_destroy();
     if (fp) fclose(fp);

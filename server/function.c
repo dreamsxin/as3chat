@@ -1,4 +1,48 @@
 #include "MyleftServer.h"
+void sleep_thread(int sec);
+void *heartbeat(void *args) {
+    int i;
+    while (1) {
+        sleep_thread(10);
+        time(&mytimestamp);
+        p = gmtime(&mytimestamp);
+        for (i = 0; i < MAX_FDS; i++) {
+            if (fd_clients[i] == NULL) {
+                continue;
+            }
+            if ((mytimestamp - fd_clients[i]->keepalivetime)>60) {
+                log_write(LOG_DEBUG, "60秒内没有活动自动退出！", __FILE__, __LINE__);
+                node_del(fd_clients[i]);
+            }
+        }
+        pthread_testcancel();
+    }
+    pthread_exit(NULL);
+}
+
+void sleep_thread(int sec) {
+    struct timespec wake;
+
+    pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+
+    time(&mytimestamp);
+    p = gmtime(&mytimestamp);
+
+    wake.tv_sec = mytimestamp + sec;
+
+    //如果把上面的sec变成msec，并替换成下面的两句，就是实现微秒级别睡眠
+    //nsec = now.tv_usec * 1000 + (msec % 1000000) * 1000;
+    //wake.tv_sec = now.tv_sec + msec / 1000000 + nsec / 1000000000;
+    wake.tv_nsec = 0;
+
+    pthread_mutex_lock(&mutex);
+    pthread_cond_timedwait(&cond, &mutex, &wake);
+    pthread_mutex_unlock(&mutex);
+
+    pthread_mutex_destroy(&mutex);
+    pthread_cond_destroy(&cond);
+}
 
 void md5(const char *str, char *dec) {
     MD5_CTX ctx;
@@ -124,7 +168,7 @@ void send_userlist(clients *node) {
         while (p != NULL) {
             if (p->fd != node->fd && p->state == FD_STATE_SUCCESS) {
                 bzero(msgbuffer, sizeof (msgbuffer));
-                snprintf(msgbuffer, sizeof (msgbuffer), "<event type='%d' username='%s'/>", EV_TYPE_USER_ADD, p->username);
+                snprintf(msgbuffer, sizeof (msgbuffer), "<event type='%d' username='%s' x='%d' y='%d' />", EV_TYPE_USER_ADD, p->username, p->x, p->y);
                 send_message(node->fd, msgbuffer);
             }
             p = p->next;
@@ -137,6 +181,7 @@ void send_roomlist(clients *node) {
     int i;
     for (i = 0; i < MAX_ROOMS; i++) {
         if (rooms[i].enable) {
+            printf("第%d房间:%s\n", i, rooms[i].name);
             bzero(msgbuffer, sizeof (msgbuffer));
             snprintf(msgbuffer, sizeof (msgbuffer), "<event type='%d' roomid='%d' name='%s' num='%d'/>", EV_TYPE_ROOM_ADD, i, rooms[i].name, rooms[i].num);
             send_message(node->fd, msgbuffer);
@@ -199,7 +244,7 @@ void send_message_all(int fd, char* message) {
         while (p != NULL) {
             if (p->state == FD_STATE_SUCCESS) {
                 printf("message:%s, to :%d,file:%s, line:%d\n", message, p->fd, __FILE__, __LINE__);
-                write(p->fd, message, strlen(message));
+                send_message(p->fd, message);
             }
             p = p->next;
         }
