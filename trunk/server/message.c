@@ -17,7 +17,9 @@ void *readtask(void *args) {
         log_write(LOG_DEBUG, "readtask", __FILE__, __LINE__);
 
         parse_message(temp);
+        pthread_testcancel();
     }
+    pthread_exit(NULL);
 }
 
 // Parses the message and sends a response
@@ -69,9 +71,7 @@ void parse_message(struct task * args) {
     const char *body;
     if (ezxml_child(event, "body")) body = ezxml_child(event, "body")->txt;
     //char *body = strescape(temp_body);
-
-    time_t mytimestamp;
-    struct tm *p;
+    
     time(&mytimestamp);
     p = gmtime(&mytimestamp);
 
@@ -280,6 +280,40 @@ void parse_message(struct task * args) {
                 send_message_all(tonode->fd, msgbuffer);
             }
         }
+        goto end;
+    }
+    else if (ev_type == EV_TYPE_MOVE && fdnode->state == FD_STATE_SUCCESS) {
+
+        const char *x = ezxml_attr(event, "x");
+        const char *y = ezxml_attr(event, "y");
+
+        if (x && y) {
+            printf("EV_TYPE_MOVE x:%s, y:%s\n", x, y);
+            fdnode->x = atoi(x);
+            fdnode->y = atoi(y);
+            printf("EV_TYPE_MOVE2 x:%d, y:%d\n", fdnode->x, fdnode->y);
+            snprintf(msgbuffer, sizeof (msgbuffer), "<event type='%d' from='%s' x='%s' y='%s'/>", EV_TYPE_MOVE, fdnode->username, x, y);
+
+            log_write(LOG_DEBUG, "EV_TYPE_MOVE", __FILE__, __LINE__);
+            send_message_all(fdnode->fd, msgbuffer);
+        }
+        goto end;
+    } else {
+        /* 运行脚本 */
+        int err = luaL_dofile(L, "conf/parsemessage.la");
+        if (err) {
+            //如果错误，显示
+            log_write(LOG_ERR, lua_tostring(L, -1), __FILE__, __LINE__);
+            //弹出栈顶的这个错误信息
+            lua_pop(L, 1);
+            goto end;
+        }
+        log_write(LOG_DEBUG, "调用脚本解析", __FILE__, __LINE__);
+        printf("fd:%d,message:%s\n", fd, in);
+        lua_getglobal(L, "parsemessage");
+        lua_pushnumber(L, fd);
+        lua_pushstring(L, ezxml_toxml(event));
+        lua_call(L, 2, 0);
         goto end;
     }
     goto end;

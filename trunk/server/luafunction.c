@@ -9,6 +9,60 @@ void lua_init() {
     luaL_openlibs(L);
 }
 
+int lua_send_message(lua_State *L) {
+    int n = lua_gettop(L);
+    if (n != 2) {
+        lua_pushstring(L, "参数个数不对");
+        lua_error(L);
+    }
+    int fd;
+    char message[MAX_BUFFER_LENGTH];
+    if (!lua_isnumber(L, 1)) {
+        lua_pushstring(L, "第一个参数类型错误，应该是socket句柄");
+        lua_error(L);
+    }
+    fd = (int) lua_tointeger(L, 1);
+
+    if (!lua_isstring(L, 2)) {
+        lua_pushstring(L, "第二个参数类型错误!");
+        lua_error(L);
+    }
+    //strcpy(message, (char*)lua_tostring(L, 2));
+    strncpy(message, (char*) lua_tostring(L, 2), sizeof (message));
+    printf("fd:%d, message:%s, file:%s, line:%i\n", fd, message, __FILE__, __LINE__);
+    if (fd > 0 && strlen(message) > 0) {
+        send_message(fd, message);
+    }
+    return 0;
+}
+
+int lua_send_message_all(lua_State *L) {
+    int n = lua_gettop(L);
+    if (n != 1) {
+        lua_pushstring(L, "参数个数不对");
+        lua_error(L);
+    }
+
+    char message[MAX_BUFFER_LENGTH];
+
+    if (!lua_isstring(L, 1)) {
+        lua_pushstring(L, "第一个参数类型错误!");
+        lua_error(L);
+    }
+
+    strncpy(message, lua_tostring(L, 1), sizeof (message));
+    printf("message:%s, file:%s, line:%i\n", message, __FILE__, __LINE__);
+    if (strlen(message) > 0) {
+        //send_message_all(message);
+    }
+    return 0;
+}
+
+void lua_register_function() {
+    lua_register(L, "send_message", lua_send_message);
+    lua_register(L, "send_message_all", lua_send_message_all);
+}
+
 void lua_load_config() {
     /* 运行脚本 */
     int err = luaL_dofile(L, "conf/config.conf");
@@ -32,6 +86,7 @@ void lua_load_config() {
     lua_getglobal(L, "pthread");
     if (lua_isnumber(L, -1)) {
         t_min = (int) lua_tointeger(L, -1);
+        if (t_min<1) t_min = 1;
         printf("t_min:%d\n", t_min);
     }
     lua_pop(L, 1);
@@ -89,7 +144,7 @@ void lua_load_config() {
         strncpy(fieldsalt, lua_tostring(L, -1), MAX_CHAR_LENGTH);
     }
     lua_pop(L, 1);
-    
+
     lua_getglobal(L, "crossdomain");
     if (lua_isstring(L, -1)) {
         strncpy(crossdomain, lua_tostring(L, -1), MAX_BUFFER_LENGTH);
@@ -143,37 +198,57 @@ void lua_load_room() {
     /* 获取变量 */
     lua_getglobal(L, "rooms");
 
-    int i;
-    // 获取参数个数
-    int n = lua_gettop(L);
-    int len = lua_objlen(L, n); //下标从1开始的，如果从0开始，要+1
-    printf("n:%d,num:%d\n", n, lua_objlen(L, n));
-    printf("-n:%d,num:%d\n", n, lua_objlen(L, -1));
-    if (lua_istable(L, -1)) {
+    int l = lua_gettop(L);
 
-        /*
-                lua_pushnil(L); // nil 入栈作为初始 key
-                while (0 != lua_next(L, -2)) {
-                    // 现在栈顶（-1）是 value，-2 位置是对应的 key
-                    // 这里可以判断 key 是什么并且对 value 进行各种处理
-                    if (lua_isstring(L, -1)) {
-                        rooms[i].enable = 1;
-                        strncpy(rooms[i].name, lua_tostring(L, -1), MAX_CHAR_LENGTH);
-                    }
-                    lua_pop(L, 1); // 弹出 value，让 key 留在栈顶
-                }
-                // 现在栈顶是 table
-         */
-        for (i = 0; i < len && i < MAX_ROOMS; i++) {
-            lua_rawgeti(L, 1, i);
-            if (lua_isstring(L, -1)) {
-                rooms[i].enable = 1;
-                strncpy(rooms[i].name, lua_tostring(L, -1), MAX_CHAR_LENGTH);
-            } else {
-                break;
+    int len = lua_objlen(L, l); //下标从1开始的，如果从0开始，要+1
+
+    printf("lua_load_room n:%d,num:%d\n", l, lua_objlen(L, l));
+    printf("lua_load_room -n:%d,num:%d\n", l, lua_objlen(L, -1));
+
+    if (lua_istable(L, -1)) {
+        int i = 0;
+        printf("[table] %d\n", l);
+        lua_pushnil(L);
+        //lua_rawgeti(L, 1, i); lua_isstring(L, -1)
+        while (lua_next(L, -2) && i < MAX_ROOMS) {
+            switch (lua_type(L, -1)) {
+                case LUA_TNIL:
+                    printf("[nil] nil\n");
+                    break;
+                case LUA_TBOOLEAN:
+                    printf("[boolean] %s\n", lua_toboolean(L, -1) ? "true" : "false");
+                    break;
+                case LUA_TLIGHTUSERDATA:
+                    printf("[lightuserdata] 0x%x\n", lua_topointer(L, -1));
+                    break;
+                case LUA_TNUMBER:
+                    printf("[number] %f\n", lua_tonumber(L, -1));
+                    break;
+                case LUA_TSTRING:
+                    i++;
+                    printf("[string] %s\n", lua_tostring(L, -1));
+                    rooms[i].enable = 1;
+                    strncpy(rooms[i].name, lua_tostring(L, -1), MAX_CHAR_LENGTH);
+                    break;
+                case LUA_TTABLE:
+                    printf("[table]\n");
+                    break;
+                case LUA_TFUNCTION:
+                    printf("[function] 0x%x\n", lua_topointer(L, -1));
+                    break;
+                case LUA_TUSERDATA:
+                    printf("userdata] 0x%x\n", lua_topointer(L, -1));
+                    break;
+                case LUA_TTHREAD:
+                    printf("[thread] 0x%x\n", lua_topointer(L, -1));
+                    break;
+                default:
+                    printf("[none]\n");
             }
-            printf("n:%d, i:%d, %s\n", n, i, lua_tostring(L, -1));
+            lua_pop(L, 1);
         }
+    } else {
+        printf("lua_istable(L, -1) 返回 false\n");
     }
 }
 

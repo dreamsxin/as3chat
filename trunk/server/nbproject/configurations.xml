@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="51">
+<configurationDescriptor version="62">
   <logicalFolder name="root" displayName="root" projectFiles="true">
     <logicalFolder name="HeaderFiles" displayName="头文件" projectFiles="true">
+      <itemPath>MyleftServer.h</itemPath>
       <itemPath>hash.h</itemPath>
       <itemPath>luafunction.h</itemPath>
-      <itemPath>MyleftServer.h</itemPath>
     </logicalFolder>
     <logicalFolder name="SourceFiles" displayName="源文件" projectFiles="true">
       <logicalFolder name="ezxml" displayName="ezxml" projectFiles="true">
@@ -71,13 +71,13 @@
         <itemPath>util/md5.h</itemPath>
         <itemPath>util/util.h</itemPath>
       </logicalFolder>
+      <itemPath>MyleftServer.c</itemPath>
       <itemPath>db_mysql.c</itemPath>
       <itemPath>function.c</itemPath>
       <itemPath>hash.c</itemPath>
       <itemPath>log.c</itemPath>
       <itemPath>luafunction.c</itemPath>
       <itemPath>message.c</itemPath>
-      <itemPath>MyleftServer.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles" displayName="资源文件" projectFiles="true">
     </logicalFolder>
@@ -89,14 +89,14 @@
   <confs>
     <conf name="Debug" type="1">
       <toolsSet>
-        <developmentServer>ubuntu@222.186.30.5</developmentServer>
+        <developmentServer>ubuntu@222.186.30.5:22</developmentServer>
         <compilerSet>GNU|GNU</compilerSet>
         <platform>2</platform>
       </toolsSet>
       <compileType>
-        <cCompilerTool>
+        <cTool>
           <warningLevel>2</warningLevel>
-        </cCompilerTool>
+        </cTool>
         <linkerTool>
           <linkerLibItems>
             <linkerLibLibItem>mysqlclient</linkerLibLibItem>
@@ -104,224 +104,20 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
-      <item path="MyleftServer.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="MyleftServer.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="db_mysql.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="ezxml/ezxml.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="ezxml/ezxml.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="function.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="hash.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="hash.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="log.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lapi.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lapi.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lauxlib.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lauxlib.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lbaselib.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lcode.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lcode.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/ldblib.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/ldebug.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/ldebug.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/ldo.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/ldo.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/ldump.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lfunc.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lfunc.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lgc.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lgc.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/linit.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/liolib.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/llex.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/llex.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/llimits.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lmathlib.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lmem.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lmem.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/loadlib.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lobject.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lobject.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lopcodes.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lopcodes.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/loslib.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lparser.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lparser.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lstate.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lstate.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lstring.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lstring.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lstrlib.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/ltable.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/ltable.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/ltablib.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/ltm.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/ltm.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lua.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/luaconf.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lualib.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lundump.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lundump.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lvm.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lvm.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lzio.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lzio.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/print.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="luafunction.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="luafunction.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="message.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="util/md5.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="util/md5.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="util/util.h">
-        <itemTool>3</itemTool>
-      </item>
     </conf>
     <conf name="Release" type="1">
       <toolsSet>
-        <developmentServer>localhost</developmentServer>
-        <compilerSet>Cygwin|Cygwin</compilerSet>
-        <platform>3</platform>
+        <developmentServer>myleft@59.125.15.165:22022</developmentServer>
+        <compilerSet>GNU|GNU</compilerSet>
+        <platform>2</platform>
       </toolsSet>
       <compileType>
-        <cCompilerTool>
+        <cTool>
           <developmentMode>5</developmentMode>
-        </cCompilerTool>
-        <ccCompilerTool>
+        </cTool>
+        <ccTool>
           <developmentMode>5</developmentMode>
-        </ccCompilerTool>
+        </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
         </fortranCompilerTool>
@@ -332,210 +128,6 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
-      <item path="MyleftServer.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="MyleftServer.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="db_mysql.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="ezxml/ezxml.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="ezxml/ezxml.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="function.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="hash.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="hash.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="log.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lapi.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lapi.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lauxlib.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lauxlib.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lbaselib.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lcode.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lcode.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/ldblib.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/ldebug.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/ldebug.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/ldo.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/ldo.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/ldump.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lfunc.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lfunc.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lgc.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lgc.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/linit.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/liolib.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/llex.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/llex.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/llimits.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lmathlib.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lmem.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lmem.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/loadlib.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lobject.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lobject.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lopcodes.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lopcodes.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/loslib.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lparser.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lparser.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lstate.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lstate.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lstring.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lstring.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lstrlib.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/ltable.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/ltable.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/ltablib.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/ltm.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/ltm.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lua.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/luaconf.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lualib.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lundump.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lundump.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lvm.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lvm.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/lzio.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="lua/lzio.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="lua/print.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="luafunction.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="luafunction.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="message.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="util/md5.c">
-        <itemTool>0</itemTool>
-      </item>
-      <item path="util/md5.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="util/util.h">
-        <itemTool>3</itemTool>
-      </item>
     </conf>
   </confs>
 </configurationDescriptor>
