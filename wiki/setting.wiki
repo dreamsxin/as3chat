@@ -1,0 +1,32 @@
+#summary One-sentence summary of this page.
+#labels as3cha,config,setting
+
+client ：
+
+-------------myleftchatclient.as-----
+private var host:String = 'myleft.org';
+private var port:int = 8222;
+
+server:
+-------------config.conf-------------
+port = 8888           #监听端口
+pthread = 5           #进程数
+dbhost = "localhost"  #数据库服务器IP地址或域名
+dbport = 3306         #数据库端口
+dbuser = "root"       #数据库账户
+dbpass = "123456"     #数据库密码
+dbname = "ucenter"
+dbtable = "uc_members"
+fieldusername = "username"
+fieldpassword = "password"
+fieldsalt = "salt"
+
+Add your content here.
+
+
+= Details =
+
+
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
