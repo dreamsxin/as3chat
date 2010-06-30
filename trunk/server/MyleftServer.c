@@ -18,7 +18,6 @@
  */
 int main() {
     t_min = 5;
-
     port = 5222;
 
     strncpy(dbhost, "localhost", MAX_CHAR_LENGTH);
@@ -115,8 +114,13 @@ int main() {
     epoll_ctl(epfd, EPOLL_CTL_ADD, s.listen_sockfd, &ev);
 
     pthread_mutex_init(&t_mutex, NULL);
-    pthread_mutex_init(&hashlock, NULL);
     pthread_cond_init(&t_cond, NULL);
+
+    pthread_mutex_init(&t_mutex_room, NULL);
+    pthread_mutex_init(&t_mutex_hash, NULL);
+
+    delay.tv_sec = 2;
+    delay.tv_nsec = 0;
 
     //开启心跳线程heartbeat
     pthread_create(&t_heartbeat, NULL, heartbeat, NULL);
@@ -148,7 +152,7 @@ int main() {
 
                 clients *node = (clients *) malloc(sizeof (clients));
                 node->fd = client_fd;
-                node->roomid = 0;
+                node->roomid = -1;
                 node->state = FD_STATE_WAIT;
                 node->type = CLIENT_TYPE_NONE;
                 node->anonymous = 1;
@@ -158,7 +162,7 @@ int main() {
                 node->username = (char *) malloc(MAX_CHAR_LENGTH * sizeof (char));
                 node->next = NULL;
                 fd_clients[client_fd] = node;
-
+                node_add(node);
 
                 ev.events = EPOLLIN | EPOLLET;
                 ev.data.fd = client_fd;
@@ -172,7 +176,7 @@ int main() {
                     continue;
                 }
                 client_fdnode = fd_clients[events[i].data.fd];
-                if (client_fdnode==NULL) {
+                if (client_fdnode == NULL) {
                     events[i].data.fd = -1;
                     close(events[i].data.fd);
                 }
@@ -211,7 +215,7 @@ int main() {
                         continue; //退出
                     }
                 } else if (strncmp(msgbuffer, POLICY, sizeof (POLICY)) == 0) {
-                    log_write(LOG_DEBUG, "send message crossdomain", __FILE__, __LINE__);
+                    printf("msg:%s, file:%s, line:%i\n", crossdomain, __FILE__, __LINE__);
                     //send_message(events[i].data.fd, crossdomain);
                     write(events[i].data.fd, crossdomain, MAX_BUFFER_LENGTH);
                     continue; //退出
@@ -241,11 +245,11 @@ int main() {
                         }
                         temp_task->next = new_task;
                     }
-					//唤醒其中一个线程即可
-					log_write(LOG_DEBUG, "唤醒所有等待cond1条件的线程", __FILE__, __LINE__);
-					pthread_cond_signal(&t_cond);
+                    //唤醒其中一个线程即可
+                    log_write(LOG_DEBUG, "唤醒所有等待cond1条件的线程", __FILE__, __LINE__);
+                    pthread_cond_signal(&t_cond);
 
-					//唤醒所有等待cond1条件的线程
+                    //唤醒所有等待cond1条件的线程
                     //log_write(LOG_DEBUG, "唤醒所有等待cond1条件的线程", __FILE__, __LINE__);
                     //pthread_cond_broadcast(&t_cond);
 
@@ -268,7 +272,7 @@ int main() {
                 }
 
                 client_fdnode = fd_clients[events[i].data.fd];
-                if (client_fdnode==NULL) {
+                if (client_fdnode == NULL) {
                     events[i].data.fd = -1;
                     close(events[i].data.fd);
                 }
@@ -284,7 +288,7 @@ int main() {
                 }
 
                 client_fdnode = fd_clients[events[i].data.fd];
-                if (client_fdnode==NULL) {
+                if (client_fdnode == NULL) {
                     events[i].data.fd = -1;
                     close(events[i].data.fd);
                 }
@@ -310,12 +314,11 @@ int main() {
 
 void destory() {
     pthread_cancel(&t_heartbeat);
-    for (t_num; t_num>0; t_num--) {
+    for (t_num; t_num > 0; t_num--) {
         pthread_cancel(&tid[t_num]);
     }
-    
+
     pthread_mutex_destroy(&t_mutex);
-    pthread_mutex_destroy(&hashlock);
     pthread_cond_destroy(&t_cond);
     db_close();
     hash_destroy();

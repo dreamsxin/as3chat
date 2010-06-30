@@ -1,5 +1,6 @@
 #include "MyleftServer.h"
 void sleep_thread(int sec);
+
 void *heartbeat(void *args) {
     int i;
     while (1) {
@@ -10,7 +11,7 @@ void *heartbeat(void *args) {
             if (fd_clients[i] == NULL) {
                 continue;
             }
-            if ((mytimestamp - fd_clients[i]->keepalivetime)>60) {
+            if ((mytimestamp - fd_clients[i]->keepalivetime) > 60) {
                 log_write(LOG_DEBUG, "60秒内没有活动自动退出！", __FILE__, __LINE__);
                 node_del(fd_clients[i]);
             }
@@ -70,10 +71,21 @@ int evutil_make_socket_nonblocking(int fd) {
 }
 
 int join_room(clients *p, int roomid) {
+    
     char msgbuffer[MAX_BUFFER_LENGTH];
     printf("join_room:%d\n", roomid);
+
+    if (roomid > MAX_ROOMS || roomid < 0 || rooms[roomid].enable == 0) {
+        return RETURN_FAILURE;
+    }
+    if (p->roomid >= 0) {
+        leave_room(p);
+    }
+    pthread_mutex_lock(&t_mutex_room);
     if (roomid < MAX_ROOMS && roomid>-1 && rooms[roomid].enable) {
+
         p->roomid = roomid;
+
         if (rooms[roomid].client == NULL) {
             rooms[roomid].client = p;
         } else {
@@ -87,6 +99,7 @@ int join_room(clients *p, int roomid) {
         }
         rooms[roomid].num++;
         //通知自己已经进入房间
+        printf("通知自己已经进入房间:%d\n", p->fd, __FILE__, __LINE__);
         bzero(msgbuffer, sizeof (msgbuffer));
         snprintf(msgbuffer, sizeof (msgbuffer), "<event type='%d' roomid='%d' name='%s' message='成功进入房间'/>", EV_TYPE_CHANGE_ROOM, roomid, rooms[roomid].name);
         send_message(p->fd, msgbuffer);
@@ -99,31 +112,36 @@ int join_room(clients *p, int roomid) {
         //发送用户列表
         log_write(LOG_DEBUG, "发送用户列表", __FILE__, __LINE__);
         send_userlist(p);
+        log_write(LOG_ERR, "roomresetlock", __FILE__, __LINE__);
     }
+    pthread_mutex_unlock(&t_mutex_room);
     return RETURN_SUCCESS;
 }
 
 int leave_room(clients *p) {
+    
     char msgbuffer[MAX_BUFFER_LENGTH];
     log_write(LOG_ERR, "leave_room", __FILE__, __LINE__);
-
-    if (p->roomid < MAX_ROOMS && p->roomid>-1 && rooms[p->roomid].client != NULL) {
-
+    int roomid = p->roomid;
+    if (roomid > MAX_ROOMS || roomid < 0 || rooms[roomid].enable == 0) {
+        return RETURN_FAILURE;
+    }
+    pthread_mutex_lock(&t_mutex_room);
+    if (roomid < MAX_ROOMS && roomid>-1 && rooms[p->roomid].client != NULL) {
         log_write(LOG_ERR, "leave_room2", __FILE__, __LINE__);
-        clients *client = rooms[p->roomid].client;
+        clients *client = rooms[roomid].client;
         clients *prev = NULL;
         log_write(LOG_ERR, "leave_room-", __FILE__, __LINE__);
         while (client != NULL) {
             log_write(LOG_ERR, "leave_room--", __FILE__, __LINE__);
             if (client->fd == p->fd) {
-                rooms[p->roomid].num--;
+                rooms[roomid].num--;
                 log_write(LOG_ERR, "leave_room3", __FILE__, __LINE__);
                 if (prev != NULL) {
                     prev->next = client->next;
                 } else {
-                    rooms[p->roomid].client = client->next;
+                    rooms[roomid].client = client->next;
                 }
-                log_write(LOG_ERR, "leave_room4", __FILE__, __LINE__);
                 break;
             }
             prev = client;
@@ -136,9 +154,23 @@ int leave_room(clients *p) {
             send_message_all(p->fd, msgbuffer);
             p->roomid = -1;
         }
+        log_write(LOG_ERR, "roomresetlock", __FILE__, __LINE__);
     }
-
+    pthread_mutex_unlock(&t_mutex_room);
     log_write(LOG_DEBUG, "leave_room end", __FILE__, __LINE__);
+    return RETURN_SUCCESS;
+}
+
+int node_add(clients *p) {
+    log_write(LOG_ERR, "node_add", __FILE__, __LINE__);
+    if (p != NULL) {
+        hash_item *item = (hash_item *) malloc(sizeof (hash_item));
+        item->key = p->username;
+        item->data = (void *) p->fd;
+        item->next = NULL;
+        hash_add(item);
+    }
+    log_write(LOG_ERR, "node_add2", __FILE__, __LINE__);
     return RETURN_SUCCESS;
 }
 
@@ -147,13 +179,11 @@ int node_del(clients *p) {
     if (p != NULL) {
         close(p->fd);
         log_write(LOG_ERR, "node_del--", __FILE__, __LINE__);
-        hash_del(p->username);
-        log_write(LOG_ERR, "node_del0", __FILE__, __LINE__);
         leave_room(p);
+        hash_del(p->username);
         fd_clients[p->fd] = NULL;
-
-        log_write(LOG_DEBUG, "node_del1", __FILE__, __LINE__);
         free(p);
+        p = NULL;
         log_write(LOG_DEBUG, "node_del11", __FILE__, __LINE__);
     }
     log_write(LOG_ERR, "node_del2", __FILE__, __LINE__);
@@ -213,11 +243,11 @@ void other_same_username(clients *node) {
     }
 }
 
-clients *get_fdnode_byname(const char *uname) {
+clients *get_fdnode_byname(const char *uname, int ufd) {
     hash_item *found_item = hash_search((char *) uname);
     int fd = -1;
     while (found_item != NULL) {
-        if (strcmp(found_item->key, uname) == 0) {
+        if (strcmp(found_item->key, uname) == 0 && (ufd < 0 || (int) found_item->data != ufd)) {
             fd = (int) found_item->data;
             break;
         }
