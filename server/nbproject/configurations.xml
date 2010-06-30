@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="62">
+<configurationDescriptor version="69">
   <logicalFolder name="root" displayName="root" projectFiles="true">
     <logicalFolder name="HeaderFiles" displayName="头文件" projectFiles="true">
       <itemPath>MyleftServer.h</itemPath>
@@ -107,7 +107,7 @@
     </conf>
     <conf name="Release" type="1">
       <toolsSet>
-        <developmentServer>myleft@59.125.15.165:22022</developmentServer>
+        <developmentServer>myleft@myleft.org:22022</developmentServer>
         <compilerSet>GNU|GNU</compilerSet>
         <platform>2</platform>
       </toolsSet>

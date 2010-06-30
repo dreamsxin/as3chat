@@ -1,4 +1,3 @@
-
 #include "MyleftServer.h"
 
 static int hash_size = 0;
@@ -50,10 +49,13 @@ hash_item *hash_search(char *key) {
 }
 
 int hash_add(hash_item *item) {
+    pthread_mutex_lock(&t_mutex_hash);
     int ret = 0;
+    log_write(LOG_ERR, "hashlock", __FILE__, __LINE__);
+    char str[10];
+    sprintf(str, "%d", hashlock);
+    log_write(LOG_ERR, str, __FILE__, __LINE__);
     if (item != NULL) {
-        pthread_mutex_lock(&hashlock);
-
         log_write(LOG_ERR, "hash_add", __FILE__, __LINE__);
         unsigned int index = BKDRHash(item->key) % hash_size;
         hash_item *found_item = hash_table[index];
@@ -74,41 +76,43 @@ int hash_add(hash_item *item) {
         } else {
             hash_table[index] = item;
         }
-
-        pthread_mutex_unlock(&hashlock);
         ret = 1;
     }
+    pthread_mutex_unlock(&t_mutex_hash);
     return ret;
 }
 
 int hash_del(char *key) {
+    pthread_mutex_lock(&t_mutex_hash);
     int ret = 0;
-    if (key == NULL) {
-        log_write(LOG_ERR, "hash_del key == NULL", __FILE__, __LINE__);
-        return ret;
-    }
-    pthread_mutex_lock(&hashlock);
-    log_write(LOG_ERR, "hash_del1", __FILE__, __LINE__);
-    unsigned int index = BKDRHash(key) % hash_size;
-    hash_item *item = hash_table[index];
-    hash_item *prev = NULL;
-    while (item != NULL) {
-        if (strcmp(item->key, key) == 0) {
-            if (prev != NULL) {
-                prev->next = item->next;
-                log_write(LOG_DEBUG, "hash_del", __FILE__, __LINE__);
-            } else {
-                hash_table[index] = item->next;
-            }
-            free(item);
-            ret = 1;
-            break;
-        }
+    log_write(LOG_ERR, "hashlock", __FILE__, __LINE__);
+    char str[10];
+    sprintf(str, "%d", hashlock);
+    log_write(LOG_ERR, str, __FILE__, __LINE__);
+    if (key != NULL) {
 
-        prev = item;
-        item = item->next;
+        log_write(LOG_ERR, "hash_del1", __FILE__, __LINE__);
+        unsigned int index = BKDRHash(key) % hash_size;
+        hash_item *item = hash_table[index];
+        hash_item *prev = NULL;
+        while (item != NULL) {
+            if (strcmp(item->key, key) == 0) {
+                if (prev != NULL) {
+                    prev->next = item->next;
+                    log_write(LOG_DEBUG, "hash_del", __FILE__, __LINE__);
+                } else {
+                    hash_table[index] = item->next;
+                }
+                free(item);
+                ret = 1;
+                break;
+            }
+
+            prev = item;
+            item = item->next;
+        }
     }
-    pthread_mutex_unlock(&hashlock);
+    pthread_mutex_unlock(&t_mutex_hash);
     log_write(LOG_ERR, "hash_del end", __FILE__, __LINE__);
     return ret;
 }

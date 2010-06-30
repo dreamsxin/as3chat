@@ -86,6 +86,7 @@ extern "C" {
 #define MAX_USERS 100
 #define MAX_ROOMS 50
 #define MAX_EVENTS 1024
+    int hashlock;
     int t_min;
     int port;
     int epfd; //epoll句柄
@@ -96,8 +97,12 @@ extern "C" {
     pthread_t tid[T_MAX];
     int t_num; //线程数
     pthread_mutex_t t_mutex;
-    pthread_mutex_t hashlock;
     pthread_cond_t t_cond;
+
+    pthread_mutex_t t_mutex_room;
+    pthread_mutex_t t_mutex_hash;
+
+    struct timespec delay;
     //需要处理的任务列表
 
     struct task {
@@ -138,8 +143,6 @@ extern "C" {
     room rooms[MAX_ROOMS];
 
     //用户名哈希
-
-
     typedef struct server {
         int listen_sockfd;
         struct sockaddr_in listen_addr;
@@ -186,6 +189,7 @@ extern "C" {
 
     int join_room(clients *p, int roomid);
     int leave_room(clients *p);
+    int node_add(clients *p);
     int node_del(clients *p);
 
     void other_same_username(clients *node);
@@ -199,7 +203,7 @@ extern "C" {
     int get_attribute(char* xml, char* attribute, char* buffer, int len);
     int get_tag(char* xml, char* tag, char* buffer, int len);
 
-    clients *get_fdnode_byname(const char *uname);
+    clients *get_fdnode_byname(const char *uname, int ufd);
 
     //message
     void *readtask(void *args);

@@ -166,33 +166,27 @@ void parse_message(struct task * args) {
         }
 
         //判断该用户名的用户在其他地方是否有登陆
-        clients *node = get_fdnode_byname(fdnode->username);
+        clients *node = get_fdnode_byname(fdnode->username, fdnode->fd);
         if (node != NULL) {
             log_write(LOG_DEBUG, "存在同名用户", __FILE__, __LINE__);
             other_same_username(node);
         }
 
-        log_write(LOG_DEBUG, "test--------------------------", __FILE__, __LINE__);
+        log_write(LOG_DEBUG, "test--------------------------", __FILE__, __LINE__);        
 
-        hash_item *item = (hash_item *) malloc(sizeof (hash_item));
-        item->key = fdnode->username;
-        item->data = (void *) fdnode->fd;
-        item->next = NULL;
-
-        hash_add(item);
-
-        fdnode->roomid = roomid;
         fdnode->type = lua_get_type(fdnode->username);
         fdnode->state = FD_STATE_SUCCESS;
+
+        node_add(fdnode);
 
         //发送登陆成功消息
         bzero(msgbuffer, sizeof (msgbuffer));
         snprintf(msgbuffer, sizeof (msgbuffer), "<event type='%d' result='1' username='%s' usertype='%d' message='登陆成功'/>", EV_TYPE_AUTH, fdnode->username, fdnode->type);
         send_message(fd, msgbuffer);
-
+        printf("fd:%d,fdnode->fd:%d\n", fd, fdnode->fd);
         //加入房间
         join_room(fdnode, roomid);
-
+        goto end;
     }
     else if (ev_type == EV_TYPE_USER_CHANGE_STATE && fdnode->state == FD_STATE_SUCCESS) {
             int state = 0;
@@ -222,7 +216,7 @@ void parse_message(struct task * args) {
             if (strcmp(fdnode->username, to) == 0) {
                 send_message(fd, msgbuffer);
             } else {
-                clients *tonode = get_fdnode_byname(to);
+                clients *tonode = get_fdnode_byname(to, -1);
                 if (tonode != NULL && tonode->roomid == fdnode->roomid) {
                     send_message(tonode->fd, msgbuffer);
                     send_message(fd, msgbuffer);
@@ -232,9 +226,6 @@ void parse_message(struct task * args) {
         }
     } else if (ev_type == EV_TYPE_CHANGE_ROOM && fdnode->state == FD_STATE_SUCCESS) {
         if (fdnode->roomid != roomid) {
-            //离开原有的房间
-            leave_room(fdnode);
-
             //加入房间
             join_room(fdnode, roomid);
         }
@@ -249,7 +240,7 @@ void parse_message(struct task * args) {
             if (strcmp(fdnode->username, username) == 0) {
                 tonode = fdnode;
             } else {
-                tonode = get_fdnode_byname(username);
+                tonode = get_fdnode_byname(username, -1);
             }
             if (tonode != NULL) {
                 bzero(msgbuffer, sizeof (msgbuffer));
@@ -266,7 +257,7 @@ void parse_message(struct task * args) {
             if (strcmp(fdnode->username, username) == 0) {
                 tonode = fdnode;
             } else {
-                tonode = get_fdnode_byname(username);
+                tonode = get_fdnode_byname(username, -1);
             }
             if (tonode != NULL) {
                 bzero(msgbuffer, sizeof (msgbuffer));

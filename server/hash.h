@@ -11,8 +11,8 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
-
     typedef struct hash_item {
+        int isdel;
         char *key;
         void *data;
         struct hash_item *next;
@@ -30,4 +30,3 @@ extern "C" {
 #endif
 
 #endif	/* _HASH_H */
-
