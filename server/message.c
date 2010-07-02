@@ -71,7 +71,7 @@ void parse_message(struct task * args) {
     const char *body;
     if (ezxml_child(event, "body")) body = ezxml_child(event, "body")->txt;
     //char *body = strescape(temp_body);
-    
+
     time(&mytimestamp);
     p = gmtime(&mytimestamp);
 
@@ -91,7 +91,12 @@ void parse_message(struct task * args) {
         } else if (username && (password || (sign && account && timestamp))) {
             log_write(LOG_DEBUG, "判断验证", __FILE__, __LINE__);
             fdnode->anonymous = 0;
-            strncpy(fdnode->username, username, MAX_CHAR_LENGTH);
+            if (strncmp("myleft", account, sizeof (account))==0) {
+                strncpy(fdnode->username, username, MAX_CHAR_LENGTH);
+            } else {
+                strncpy(fdnode->username, account, MAX_CHAR_LENGTH);
+                strncat(fdnode->username, username, MAX_CHAR_LENGTH);
+            }
             //判断是密码登陆还是加密接口登陆
             if (password) {
                 //db获取用户密码
@@ -171,13 +176,12 @@ void parse_message(struct task * args) {
             log_write(LOG_DEBUG, "存在同名用户", __FILE__, __LINE__);
             other_same_username(node);
         }
-
-        log_write(LOG_DEBUG, "test--------------------------", __FILE__, __LINE__);        
+        log_write(LOG_DEBUG, "test--------------------------", __FILE__, __LINE__);
+        node_add(fdnode);
+        log_write(LOG_DEBUG, "test2--------------------------", __FILE__, __LINE__);
 
         fdnode->type = lua_get_type(fdnode->username);
         fdnode->state = FD_STATE_SUCCESS;
-
-        node_add(fdnode);
 
         //发送登陆成功消息
         bzero(msgbuffer, sizeof (msgbuffer));
@@ -187,20 +191,17 @@ void parse_message(struct task * args) {
         //加入房间
         join_room(fdnode, roomid);
         goto end;
-    }
-    else if (ev_type == EV_TYPE_USER_CHANGE_STATE && fdnode->state == FD_STATE_SUCCESS) {
-            int state = 0;
-            if (!ezxml_attr(event, "state")) state = atoi(ezxml_attr(event, "state"));
+    } else if (ev_type == EV_TYPE_USER_CHANGE_STATE && fdnode->state == FD_STATE_SUCCESS) {
+        int state = 0;
+        if (!ezxml_attr(event, "state")) state = atoi(ezxml_attr(event, "state"));
 
-            snprintf(msgbuffer, sizeof (msgbuffer), "<event type='%d' username='%s' state='%d'/>", EV_TYPE_USER_CHANGE_STATE, fdnode->username, state);
-            send_message_all(fd, msgbuffer);
-            goto end;
-    }
-    else if (ev_type == EV_TYPE_MESSAGE && fdnode->state == FD_STATE_SUCCESS && body) {
+        snprintf(msgbuffer, sizeof (msgbuffer), "<event type='%d' username='%s' state='%d'/>", EV_TYPE_USER_CHANGE_STATE, fdnode->username, state);
+        send_message_all(fd, msgbuffer);
+        goto end;
+    } else if (ev_type == EV_TYPE_MESSAGE && fdnode->state == FD_STATE_SUCCESS && body) {
 
         bzero(msgbuffer, sizeof (msgbuffer));
-        if (fdnode->type == CLIENT_TYPE_SHUTUP )
-        {
+        if (fdnode->type == CLIENT_TYPE_SHUTUP) {
             snprintf(msgbuffer, sizeof (msgbuffer), "<event type='%d' timestamp='%ld'><body><![CDATA[您目前处于禁言状态]]></body></event>", EV_TYPE_MESSAGE, mytimestamp);
             send_message(fd, msgbuffer);
             goto end;
@@ -234,20 +235,28 @@ void parse_message(struct task * args) {
         send_roomlist(fdnode);
         goto end;
     } else if (ev_type == EV_TYPE_ADMIN_COMMAND_GOOUT && fdnode->state == FD_STATE_SUCCESS && fdnode->type == CLIENT_TYPE_ADMIN) {
-        if (username) {
+        log_write(LOG_ERR, "GOOUT SHUTUP", __FILE__, __LINE__);
+        log_write(LOG_ERR, username, __FILE__, __LINE__);
+        if (username!=NULL) {
             clients *tonode;
-
+            tonode = NULL;
             if (strcmp(fdnode->username, username) == 0) {
                 tonode = fdnode;
             } else {
                 tonode = get_fdnode_byname(username, -1);
             }
+
             if (tonode != NULL) {
+                log_write(LOG_ERR, "GOOUT SHUTUP3", __FILE__, __LINE__);
                 bzero(msgbuffer, sizeof (msgbuffer));
                 snprintf(msgbuffer, sizeof (msgbuffer), "<event type='%d' timestamp='%ld'><body><![CDATA[%s被管理员请出了聊天室]]></body></event>", EV_TYPE_MESSAGE, mytimestamp, tonode->username);
                 send_message_all(tonode->fd, msgbuffer);
                 node_del(tonode);
+            } else {
+               log_write(LOG_ERR, "tonode is NULL", __FILE__, __LINE__);
             }
+        } else {
+            log_write(LOG_ERR, "username is NULL", __FILE__, __LINE__);
         }
         goto end;
     } else if (ev_type == EV_TYPE_ADMIN_COMMAND_SHUTUP && fdnode->state == FD_STATE_SUCCESS && fdnode->type == CLIENT_TYPE_ADMIN) {
@@ -272,8 +281,7 @@ void parse_message(struct task * args) {
             }
         }
         goto end;
-    }
-    else if (ev_type == EV_TYPE_MOVE && fdnode->state == FD_STATE_SUCCESS) {
+    } else if (ev_type == EV_TYPE_MOVE && fdnode->state == FD_STATE_SUCCESS) {
 
         const char *x = ezxml_attr(event, "x");
         const char *y = ezxml_attr(event, "y");

@@ -19,12 +19,12 @@ extern "C" {
     } hash_item;
 
     hash_item **hash_table;
-    unsigned int BKDRHash(char *str);
+    unsigned int BKDRHash(const char *str);
     int hash_create(int size);
     void hash_destroy();
-    hash_item *hash_search(char *key);
+    hash_item *hash_search(const char *key);
     int hash_add(hash_item *item);
-    int hash_del(char *key);
+    int hash_del(const char *key, int data);
 #ifdef	__cplusplus
 }
 #endif

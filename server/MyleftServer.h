@@ -99,7 +99,7 @@ extern "C" {
     pthread_mutex_t t_mutex;
     pthread_cond_t t_cond;
 
-    pthread_mutex_t t_mutex_room;
+    pthread_mutex_t t_mutex_room[MAX_ROOMS];
     pthread_mutex_t t_mutex_hash;
 
     struct timespec delay;
@@ -126,7 +126,7 @@ extern "C" {
         int x;
         int y;
         int keepalivetime;
-        char *username; //用户名
+        char username[64]; //用户名
         struct clients *next;
     } clients;
     //客户端fd->fds关联数组
@@ -196,8 +196,8 @@ extern "C" {
     void send_logout(clients *node);
     void send_userlist(clients *node);
     void send_roomlist(clients *node);
-    void send_message(int fd, char* message);
-    void send_message_all(int fd, char* message);
+    void send_message(const int fd, const char* message);
+    void send_message_all(const int fd, const char* message);
 
 
     int get_attribute(char* xml, char* attribute, char* buffer, int len);

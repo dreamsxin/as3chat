@@ -4,7 +4,7 @@ void sleep_thread(int sec);
 void *heartbeat(void *args) {
     int i;
     while (1) {
-        sleep_thread(10);
+        sleep_thread(20);
         time(&mytimestamp);
         p = gmtime(&mytimestamp);
         for (i = 0; i < MAX_FDS; i++) {
@@ -71,19 +71,18 @@ int evutil_make_socket_nonblocking(int fd) {
 }
 
 int join_room(clients *p, int roomid) {
-    
+
     char msgbuffer[MAX_BUFFER_LENGTH];
     printf("join_room:%d\n", roomid);
 
-    if (roomid > MAX_ROOMS || roomid < 0 || rooms[roomid].enable == 0) {
+    if (p == NULL || roomid > MAX_ROOMS || roomid < 0 || rooms[roomid].enable == 0 || p->roomid == roomid) {
         return RETURN_FAILURE;
     }
     if (p->roomid >= 0) {
         leave_room(p);
     }
-    pthread_mutex_lock(&t_mutex_room);
+    pthread_mutex_lock(&t_mutex_room[roomid]);
     if (roomid < MAX_ROOMS && roomid>-1 && rooms[roomid].enable) {
-
         p->roomid = roomid;
 
         if (rooms[roomid].client == NULL) {
@@ -96,6 +95,7 @@ int join_room(clients *p, int roomid) {
                 client = client->next;
             }
             client->next = p;
+            p->next = NULL;
         }
         rooms[roomid].num++;
         //通知自己已经进入房间
@@ -114,19 +114,20 @@ int join_room(clients *p, int roomid) {
         send_userlist(p);
         log_write(LOG_ERR, "roomresetlock", __FILE__, __LINE__);
     }
-    pthread_mutex_unlock(&t_mutex_room);
+    pthread_mutex_unlock(&t_mutex_room[roomid]);
     return RETURN_SUCCESS;
 }
 
 int leave_room(clients *p) {
-    
+
     char msgbuffer[MAX_BUFFER_LENGTH];
     log_write(LOG_ERR, "leave_room", __FILE__, __LINE__);
-    int roomid = p->roomid;
-    if (roomid > MAX_ROOMS || roomid < 0 || rooms[roomid].enable == 0) {
+
+    if (p == NULL || p->roomid > MAX_ROOMS || p->roomid < 0) {
         return RETURN_FAILURE;
     }
-    pthread_mutex_lock(&t_mutex_room);
+    int roomid = p->roomid;
+    pthread_mutex_lock(&t_mutex_room[roomid]);
     if (roomid < MAX_ROOMS && roomid>-1 && rooms[p->roomid].client != NULL) {
         log_write(LOG_ERR, "leave_room2", __FILE__, __LINE__);
         clients *client = rooms[roomid].client;
@@ -156,7 +157,7 @@ int leave_room(clients *p) {
         }
         log_write(LOG_ERR, "roomresetlock", __FILE__, __LINE__);
     }
-    pthread_mutex_unlock(&t_mutex_room);
+    pthread_mutex_unlock(&t_mutex_room[roomid]);
     log_write(LOG_DEBUG, "leave_room end", __FILE__, __LINE__);
     return RETURN_SUCCESS;
 }
@@ -164,13 +165,14 @@ int leave_room(clients *p) {
 int node_add(clients *p) {
     log_write(LOG_ERR, "node_add", __FILE__, __LINE__);
     if (p != NULL) {
+        log_write(LOG_ERR, "node_add2", __FILE__, __LINE__);
         hash_item *item = (hash_item *) malloc(sizeof (hash_item));
         item->key = p->username;
         item->data = (void *) p->fd;
         item->next = NULL;
         hash_add(item);
     }
-    log_write(LOG_ERR, "node_add2", __FILE__, __LINE__);
+    log_write(LOG_ERR, "node_add end", __FILE__, __LINE__);
     return RETURN_SUCCESS;
 }
 
@@ -180,7 +182,7 @@ int node_del(clients *p) {
         close(p->fd);
         log_write(LOG_ERR, "node_del--", __FILE__, __LINE__);
         leave_room(p);
-        hash_del(p->username);
+        hash_del(p->username, p->fd);
         fd_clients[p->fd] = NULL;
         free(p);
         p = NULL;
@@ -244,9 +246,12 @@ void other_same_username(clients *node) {
 }
 
 clients *get_fdnode_byname(const char *uname, int ufd) {
-    hash_item *found_item = hash_search((char *) uname);
+    log_write(LOG_ERR, "get_fdnode_byname", __FILE__, __LINE__);
+    log_write(LOG_ERR, uname, __FILE__, __LINE__);
+    hash_item *found_item = hash_search(uname);
     int fd = -1;
     while (found_item != NULL) {
+        log_write(LOG_ERR, found_item->key, __FILE__, __LINE__);
         if (strcmp(found_item->key, uname) == 0 && (ufd < 0 || (int) found_item->data != ufd)) {
             fd = (int) found_item->data;
             break;
@@ -257,14 +262,16 @@ clients *get_fdnode_byname(const char *uname, int ufd) {
     return fd >= 0 ? fd_clients[fd] : NULL;
 }
 
-void send_message(int fd, char* message) {
+void send_message(const int fd, const char* message) {
     printf("message:%s, to :%d,file:%s, line:%d\n", message, fd, __FILE__, __LINE__);
-    if (message != NULL)
-        write(fd, message, strlen(message));
+    int ret = -1;
+    if (message != NULL) {
+       ret = write(fd, message, strlen(message));
+    }
 }
 //包括自己
 
-void send_message_all(int fd, char* message) {
+void send_message_all(const int fd, const char* message) {
 
     if (fd_clients[fd] == NULL || message == NULL) return;
     clients *client = fd_clients[fd];
