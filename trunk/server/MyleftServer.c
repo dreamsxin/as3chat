@@ -35,6 +35,8 @@ int main() {
     }
 
     for (i = 0; i < MAX_ROOMS; i++) {
+        
+        pthread_mutex_init(&t_mutex_room[i], NULL);
         rooms[i].enable = 0;
         rooms[i].num = 0;
         memset(rooms[i].name, '\0', sizeof (rooms[i].name));
@@ -116,7 +118,6 @@ int main() {
     pthread_mutex_init(&t_mutex, NULL);
     pthread_cond_init(&t_cond, NULL);
 
-    pthread_mutex_init(&t_mutex_room, NULL);
     pthread_mutex_init(&t_mutex_hash, NULL);
 
     delay.tv_sec = 2;
@@ -159,10 +160,11 @@ int main() {
                 node->x = 1;
                 node->y = 1;
                 node->keepalivetime = mytimestamp;
-                node->username = (char *) malloc(MAX_CHAR_LENGTH * sizeof (char));
+                //node->username[0] = '\0';
+                memset(node->username, 1 ,sizeof(node->username));//bzero(c, sizeof(c));
                 node->next = NULL;
+                
                 fd_clients[client_fd] = node;
-                node_add(node);
 
                 ev.events = EPOLLIN | EPOLLET;
                 ev.data.fd = client_fd;
@@ -201,8 +203,6 @@ int main() {
                         continue; //退出
                     }
                 } else if (strncmp(msgbuffer, PING, sizeof (PING)) == 0) {
-                    client_fdnode->keepalivetime = mytimestamp;
-                    log_write(LOG_DEBUG, "PING", __FILE__, __LINE__);
                     send_message(client_fdnode->fd, "<event type='0'/>");
                     continue; //退出
                 } else if (strncmp(msgbuffer, QUIT, sizeof (QUIT)) == 0) {
@@ -218,9 +218,6 @@ int main() {
                     printf("msg:%s, file:%s, line:%i\n", crossdomain, __FILE__, __LINE__);
                     //send_message(events[i].data.fd, crossdomain);
                     write(events[i].data.fd, crossdomain, MAX_BUFFER_LENGTH);
-                    continue; //退出
-                } else if (strncmp(msgbuffer, PING, sizeof (PING)) == 0) {
-                    log_write(LOG_DEBUG, "PING", __FILE__, __LINE__);
                     continue; //退出
                 }
                 log_write(LOG_DEBUG, "添加新的读任务", __FILE__, __LINE__);
@@ -313,17 +310,22 @@ int main() {
 //注销程序
 
 void destory() {
-    pthread_cancel(&t_heartbeat);
+    int i;
+    pthread_cancel(t_heartbeat);
     for (t_num; t_num > 0; t_num--) {
-        pthread_cancel(&tid[t_num]);
+        pthread_cancel(tid[t_num]);
     }
 
+    for (i = 0; i < MAX_ROOMS; i++) {
+        pthread_mutex_destroy(&t_mutex_room[i]);
+    }
+    pthread_mutex_destroy(&t_mutex_hash);
     pthread_mutex_destroy(&t_mutex);
     pthread_cond_destroy(&t_cond);
     db_close();
     hash_destroy();
     if (fp) fclose(fp);
-    int i;
+    
     for (i = 0; i < MAX_FDS; i++) {
         if (fd_clients[i] != NULL) {
             node_del(fd_clients[i]);

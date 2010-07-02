@@ -3,14 +3,17 @@
 static int hash_size = 0;
 // BKDR Hash Function
 
-unsigned int BKDRHash(char *str) {
+unsigned int BKDRHash(const char *str) {
+    log_write(LOG_ERR, "BKDRHash", __FILE__, __LINE__);
     unsigned int seed = 131; // 31 131 1313 13131 131313 etc..
     unsigned int hash = 0;
 
-    while (*str) {
-        hash = hash * seed + (*str++);
+    log_write(LOG_ERR, str, __FILE__, __LINE__);
+    while (*str){
+        log_write(LOG_ERR, "while", __FILE__, __LINE__);
+        hash=hash*seed+(*str++);
     }
-
+    log_write(LOG_ERR, "BKDRHash2", __FILE__, __LINE__);
     return (hash & 0x7FFFFFFF);
 }
 
@@ -33,29 +36,32 @@ void hash_destroy() {
     if (hash_table != NULL) free(hash_table);
 }
 
-hash_item *hash_search(char *key) {
+hash_item *hash_search(const char *key) {
+    log_write(LOG_ERR, "hash_search", __FILE__, __LINE__);
+    log_write(LOG_ERR, key, __FILE__, __LINE__);
     if (hash_size > 0) {
+        log_write(LOG_ERR, "hash_search2", __FILE__, __LINE__);
         unsigned int index = BKDRHash(key) % hash_size;
-
+        log_write(LOG_ERR, "hash_search3", __FILE__, __LINE__);
         hash_item *item = hash_table[index];
         while (item != NULL) {
+            log_write(LOG_ERR, "hash_search4", __FILE__, __LINE__);
             if (strcmp(item->key, key) == 0) {
+                log_write(LOG_ERR, "hash_search found", __FILE__, __LINE__);
                 return item;
             }
             item = item->next;
         }
     }
+    log_write(LOG_ERR, "hash_search end", __FILE__, __LINE__);
     return NULL;
 }
 
 int hash_add(hash_item *item) {
-    pthread_mutex_lock(&t_mutex_hash);
     int ret = 0;
     log_write(LOG_ERR, "hashlock", __FILE__, __LINE__);
-    char str[10];
-    sprintf(str, "%d", hashlock);
-    log_write(LOG_ERR, str, __FILE__, __LINE__);
     if (item != NULL) {
+         pthread_mutex_lock(&t_mutex_hash);
         log_write(LOG_ERR, "hash_add", __FILE__, __LINE__);
         unsigned int index = BKDRHash(item->key) % hash_size;
         hash_item *found_item = hash_table[index];
@@ -77,26 +83,23 @@ int hash_add(hash_item *item) {
             hash_table[index] = item;
         }
         ret = 1;
-    }
-    pthread_mutex_unlock(&t_mutex_hash);
+        pthread_mutex_unlock(&t_mutex_hash);
+    }    
     return ret;
 }
 
-int hash_del(char *key) {
-    pthread_mutex_lock(&t_mutex_hash);
+int hash_del(const char *key, int fd) {
+    
     int ret = 0;
-    log_write(LOG_ERR, "hashlock", __FILE__, __LINE__);
-    char str[10];
-    sprintf(str, "%d", hashlock);
-    log_write(LOG_ERR, str, __FILE__, __LINE__);
+    log_write(LOG_ERR, "hash_del", __FILE__, __LINE__);
     if (key != NULL) {
-
+        pthread_mutex_lock(&t_mutex_hash);
         log_write(LOG_ERR, "hash_del1", __FILE__, __LINE__);
         unsigned int index = BKDRHash(key) % hash_size;
         hash_item *item = hash_table[index];
         hash_item *prev = NULL;
         while (item != NULL) {
-            if (strcmp(item->key, key) == 0) {
+            if (strcmp(item->key, key) == 0 && (int)item->data==fd) {
                 if (prev != NULL) {
                     prev->next = item->next;
                     log_write(LOG_DEBUG, "hash_del", __FILE__, __LINE__);
@@ -111,8 +114,8 @@ int hash_del(char *key) {
             prev = item;
             item = item->next;
         }
+        pthread_mutex_unlock(&t_mutex_hash);
     }
-    pthread_mutex_unlock(&t_mutex_hash);
     log_write(LOG_ERR, "hash_del end", __FILE__, __LINE__);
     return ret;
 }

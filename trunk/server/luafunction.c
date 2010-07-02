@@ -86,7 +86,7 @@ void lua_load_config() {
     lua_getglobal(L, "pthread");
     if (lua_isnumber(L, -1)) {
         t_min = (int) lua_tointeger(L, -1);
-        if (t_min<1) t_min = 1;
+        if (t_min < 1) t_min = 1;
         printf("t_min:%d\n", t_min);
     }
     lua_pop(L, 1);
@@ -219,7 +219,7 @@ void lua_load_room() {
                     printf("[boolean] %s\n", lua_toboolean(L, -1) ? "true" : "false");
                     break;
                 case LUA_TLIGHTUSERDATA:
-                    printf("[lightuserdata] 0x%x\n", lua_topointer(L, -1));
+                    printf("[lightuserdata] 0x%x\n", (int) lua_topointer(L, -1));
                     break;
                 case LUA_TNUMBER:
                     printf("[number] %f\n", lua_tonumber(L, -1));
@@ -234,13 +234,13 @@ void lua_load_room() {
                     printf("[table]\n");
                     break;
                 case LUA_TFUNCTION:
-                    printf("[function] 0x%x\n", lua_topointer(L, -1));
+                    printf("[function] 0x%x\n", (int) lua_topointer(L, -1));
                     break;
                 case LUA_TUSERDATA:
-                    printf("userdata] 0x%x\n", lua_topointer(L, -1));
+                    printf("userdata] 0x%x\n", (int) lua_topointer(L, -1));
                     break;
                 case LUA_TTHREAD:
-                    printf("[thread] 0x%x\n", lua_topointer(L, -1));
+                    printf("[thread] 0x%x\n", (int) lua_topointer(L, -1));
                     break;
                 default:
                     printf("[none]\n");
