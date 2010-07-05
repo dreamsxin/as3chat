@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="69">
+  <logicalFolder name="root" displayName="root" projectFiles="true">
+    <logicalFolder name="HeaderFiles" displayName="头文件" projectFiles="true">
+      <itemPath>MyleftServer.h</itemPath>
+      <itemPath>hash.h</itemPath>
+      <itemPath>luafunction.h</itemPath>
+    </logicalFolder>
+    <logicalFolder name="SourceFiles" displayName="源文件" projectFiles="true">
+      <logicalFolder name="ezxml" displayName="ezxml" projectFiles="true">
+        <itemPath>ezxml/ezxml.c</itemPath>
+        <itemPath>ezxml/ezxml.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="lua" displayName="lua" projectFiles="true">
+        <itemPath>lua/lapi.c</itemPath>
+        <itemPath>lua/lapi.h</itemPath>
+        <itemPath>lua/lauxlib.c</itemPath>
+        <itemPath>lua/lauxlib.h</itemPath>
+        <itemPath>lua/lbaselib.c</itemPath>
+        <itemPath>lua/lcode.c</itemPath>
+        <itemPath>lua/lcode.h</itemPath>
+        <itemPath>lua/ldblib.c</itemPath>
+        <itemPath>lua/ldebug.c</itemPath>
+        <itemPath>lua/ldebug.h</itemPath>
+        <itemPath>lua/ldo.c</itemPath>
+        <itemPath>lua/ldo.h</itemPath>
+        <itemPath>lua/ldump.c</itemPath>
+        <itemPath>lua/lfunc.c</itemPath>
+        <itemPath>lua/lfunc.h</itemPath>
+        <itemPath>lua/lgc.c</itemPath>
+        <itemPath>lua/lgc.h</itemPath>
+        <itemPath>lua/linit.c</itemPath>
+        <itemPath>lua/liolib.c</itemPath>
+        <itemPath>lua/llex.c</itemPath>
+        <itemPath>lua/llex.h</itemPath>
+        <itemPath>lua/llimits.h</itemPath>
+        <itemPath>lua/lmathlib.c</itemPath>
+        <itemPath>lua/lmem.c</itemPath>
+        <itemPath>lua/lmem.h</itemPath>
+        <itemPath>lua/loadlib.c</itemPath>
+        <itemPath>lua/lobject.c</itemPath>
+        <itemPath>lua/lobject.h</itemPath>
+        <itemPath>lua/lopcodes.c</itemPath>
+        <itemPath>lua/lopcodes.h</itemPath>
+        <itemPath>lua/loslib.c</itemPath>
+        <itemPath>lua/lparser.c</itemPath>
+        <itemPath>lua/lparser.h</itemPath>
+        <itemPath>lua/lstate.c</itemPath>
+        <itemPath>lua/lstate.h</itemPath>
+        <itemPath>lua/lstring.c</itemPath>
+        <itemPath>lua/lstring.h</itemPath>
+        <itemPath>lua/lstrlib.c</itemPath>
+        <itemPath>lua/ltable.c</itemPath>
+        <itemPath>lua/ltable.h</itemPath>
+        <itemPath>lua/ltablib.c</itemPath>
+        <itemPath>lua/ltm.c</itemPath>
+        <itemPath>lua/ltm.h</itemPath>
+        <itemPath>lua/lua.h</itemPath>
+        <itemPath>lua/luaconf.h</itemPath>
+        <itemPath>lua/lualib.h</itemPath>
+        <itemPath>lua/lundump.c</itemPath>
+        <itemPath>lua/lundump.h</itemPath>
+        <itemPath>lua/lvm.c</itemPath>
+        <itemPath>lua/lvm.h</itemPath>
+        <itemPath>lua/lzio.c</itemPath>
+        <itemPath>lua/lzio.h</itemPath>
+        <itemPath>lua/print.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="util" displayName="util" projectFiles="true">
+        <itemPath>util/md5.c</itemPath>
+        <itemPath>util/md5.h</itemPath>
+        <itemPath>util/util.h</itemPath>
+      </logicalFolder>
+      <itemPath>MyleftServer.c</itemPath>
+      <itemPath>db_mysql.c</itemPath>
+      <itemPath>function.c</itemPath>
+      <itemPath>hash.c</itemPath>
+      <itemPath>log.c</itemPath>
+      <itemPath>luafunction.c</itemPath>
+      <itemPath>message.c</itemPath>
+    </logicalFolder>
+    <logicalFolder name="ResourceFiles" displayName="资源文件" projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles" displayName="重要文件" projectFiles="false">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Debug" type="1">
+      <toolsSet>
+        <developmentServer>ubuntu@222.186.30.5:22</developmentServer>
+        <compilerSet>GNU|GNU</compilerSet>
+        <platform>2</platform>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <warningLevel>2</warningLevel>
+        </cTool>
+        <linkerTool>
+          <linkerLibItems>
+            <linkerLibLibItem>mysqlclient</linkerLibLibItem>
+            <linkerLibLibItem>ssl</linkerLibLibItem>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+    </conf>
+    <conf name="Release" type="1">
+      <toolsSet>
+        <developmentServer>myleft@myleft.org:22022</developmentServer>
+        <compilerSet>GNU|GNU</compilerSet>
+        <platform>2</platform>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <developmentMode>5</developmentMode>
+        </cTool>
+        <ccTool>
+          <developmentMode>5</developmentMode>
+        </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <linkerTool>
+          <linkerLibItems>
+            <linkerLibLibItem>mysqlclient</linkerLibLibItem>
+            <linkerLibLibItem>ssl</linkerLibLibItem>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+    </conf>
+  </confs>
+</configurationDescriptor>
