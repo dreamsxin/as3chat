@@ -1,6 +1,6 @@
 package
 {
-	import as3isolib.core.ClassFactory;
+	import mx.core.ClassFactory;
 	import as3isolib.display.IsoSprite;
 	import as3isolib.display.IsoView;
 	import as3isolib.display.primitive.IsoBox;
@@ -53,7 +53,7 @@ package
 	
 	import skins.ALookAndFeel;
 
-	//[SWF(frameRate="30")]
+	[SWF(backgroundColor="#869ca7")]//,frameRate="30"
 	public class arpg extends Sprite
 	{
 		private var socket:SocketConnection;
@@ -691,10 +691,10 @@ package
 				var p1:IntPoint=screenToMap(user.point.x, user.point.y);
 				//trace('.toString()',user.point.toString(), user.nextpoint.toString());
 				//trace(user.display.sprites[0]);
-				user.display.sprites[0].setDirection(pointToDirection(user.point, user.nextpoint));
+				if (user.display) user.display.sprites[0].setDirection(pointToDirection(user.point, user.nextpoint));
 				
-				if (user.display.sprites[0].state != CharacterStatic.walk)
-					if (user.display) user.display.sprites[0].walk();
+				if (user.display && user.display.sprites[0].state != CharacterStatic.walk)
+				if (user.display) user.display.sprites[0].walk();
 				e.setValues({"y":user.nextpoint.y * tileSize, "x":user.nextpoint.x * tileSize});
 				
 			}
