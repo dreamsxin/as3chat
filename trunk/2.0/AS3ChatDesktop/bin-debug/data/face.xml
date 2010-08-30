@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<faces>
+	<face label="精彩" value="[face:01]" icon="assets/face/01.gif" />
+	<face label="感动" value="[face:02]" icon="assets/face/02.gif" />
+	<face label="好笑" value="[face:03]" icon="assets/face/03.gif" />
+	<face label="开心" value="[face:04]" icon="assets/face/04.gif" />
+	<face label="愤怒" value="[face:05]" icon="assets/face/05.gif" />
+	<face label="无聊" value="[face:06]" icon="assets/face/06.gif" />
+	<face label="灌水" value="[face:07]" icon="assets/face/07.gif" />
+</faces>

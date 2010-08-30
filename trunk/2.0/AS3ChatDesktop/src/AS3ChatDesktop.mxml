@@ -1,0 +1,661 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					   xmlns:s="library://ns.adobe.com/flex/spark" 
+					   xmlns:mx="library://ns.adobe.com/flex/mx" 
+					   xmlns:controls="org.myleft.controls.*" 
+					   width="260" height="380" currentState="ProgressState" showStatusBar="false" alwaysInFront="{infront}" applicationComplete="init()">
+	<fx:Script>
+		<![CDATA[
+			import mx.binding.utils.BindingUtils;
+			import mx.controls.Alert;
+			import mx.controls.ToolTip;
+			import mx.events.CloseEvent;
+			import mx.events.ListEvent;
+			import mx.events.PropertyChangeEvent;
+			import mx.events.SliderEvent;
+			import mx.utils.Base64Decoder;
+			import mx.utils.Base64Encoder;
+			
+			import myleft.org.AutoUpdater;
+			import myleft.org.components.ChatWindow;
+			import myleft.org.components.RoomWindow;
+			
+			import org.myleft.core.MyleftServer;
+			import org.myleft.core.SocketConnection;
+			import org.myleft.data.Define;
+			import org.myleft.events.AutoUpdaterEvent;
+			import org.myleft.events.SocketConnectionEvent;
+			
+			import spark.events.TitleWindowBoundsEvent;
+			
+			private var host:String = "myleft.org";
+			private var port:int = 8888;
+			[Bindable]
+			private var server:MyleftServer;
+			
+			[Bindable]
+			private var username:String = '';
+			[Bindable]
+			private var password:String = '';
+			[Bindable]
+			private var remember:Boolean = false;
+			[Bindable]
+			private var infront:Boolean = false;
+			[Bindable(event="AutoStart_CHANGED")]//默认event="propertyChange"
+			private var autostart:Boolean = false;
+			
+			private var roomWindow:RoomWindow;
+			
+			private var autoUpdater:AutoUpdater;
+			private function init():void{	
+				var myStyleManager:IStyleManager2 = myStyleManager = StyleManager.getStyleManager(this.moduleFactory);
+				myStyleManager.getStyleDeclaration("global").setStyle("fontSize", 12);
+				myStyleManager.getStyleDeclaration("mx.controls.ToolTip").setStyle("fontSize", 12);
+				
+				progressBar.indeterminate = true;
+				progressBar.label = "初始化……";
+				
+				//添加任务栏/停靠栏图标
+				addAppIcon();
+				
+				server = new MyleftServer;
+				
+				//progressBar.mode = "manual";
+				//progressBar.label = "请稍等……%1 of %2 (%3%%)";
+				//progressBar.setProgress(10, 100);
+				//关闭
+				mainTitleWindow.addEventListener(CloseEvent.CLOSE, function(e:CloseEvent):void{					
+					var closeEvent:Event = new Event(Event.CLOSING,true,true);
+					stage.nativeWindow.dispatchEvent(closeEvent);
+				});
+				this.stage.nativeWindow.addEventListener(Event.CLOSING, nativeWindow_closeHandler);
+				
+				//拖动
+				mainTitleWindow.moveArea.addEventListener(MouseEvent.MOUSE_DOWN, moveArea_mouseHandler);
+				
+				//居中
+				this.stage.nativeWindow.x = (Capabilities.screenResolutionX - this.stage.nativeWindow.width) / 2;
+				this.stage.nativeWindow.y = (Capabilities.screenResolutionY - this.stage.nativeWindow.height) / 2;
+				
+				this.addEventListener( PropertyChangeEvent.PROPERTY_CHANGE, changeHandler );
+				
+				checkUpdater();				
+				
+			}
+			
+			private function checkUpdater():void{
+				progressBar.label = "检查更新版本……";
+				autoUpdater = new AutoUpdater('http://media.myleft.org/soft/update.xml');
+				autoUpdater.checkUpdate();
+				autoUpdater.addEventListener(AutoUpdaterEvent.VERSION_CHECK_COMPLETE, alertUpdaterHandler);
+			}
+			
+			private function alertUpdaterHandler(e:AutoUpdaterEvent):void{
+				var appDescriptor:XML = NativeApplication.nativeApplication.applicationDescriptor;
+				var ns:Namespace = appDescriptor.namespace();
+				var localVersion:String = appDescriptor.ns::version;
+				if (autoUpdater.remoteVersion != localVersion) {
+					Alert.show("有新的更新，是否马上更新\n\n" +
+						"当前版本: " + localVersion + "\n" +
+						"新的版本: " + autoUpdater.remoteVersion,
+						'更新确认',
+						Alert.YES | Alert.NO, null, confirmHandler);
+				} else {
+					Alert.show("没有可用更新，当前版本: " + localVersion);
+					startServer();
+				}
+			}
+			
+			private function confirmHandler(event:CloseEvent):void {
+				if (event.detail == Alert.YES) {
+					autoUpdater.downloadAirFile();
+				} else {
+					startServer();
+				}
+			}
+			
+			private function startServer():void {
+				
+				readLocalXML();
+				
+				progressBar.label = "连接服务器……";
+				
+				server.addEventListener(Define.CONNECTING, eventHandle);
+				server.addEventListener(Define.CONNECT, eventHandle);
+				server.addEventListener(Define.CLOSE, eventHandle);
+				server.addEventListener(Define.EV_TYPE_AUTH_SUCCESS, eventHandle);
+				server.addEventListener(Define.EV_TYPE_AUTH_FAILURE, eventHandle);
+				server.addEventListener(Define.EV_TYPE_AUTH_OTHER_LOGIN, eventHandle);
+				
+				server.addEventListener(Define.EV_TYPE_SYSTEM_MESSAGE, eventHandle);
+				server.addEventListener(Define.EV_TYPE_PRIVATE_MESSAGE, eventHandle);
+				server.addEventListener(Define.EV_TYPE_PUBLIC_MESSAGE, eventHandle);
+				
+				server.addEventListener(Define.EV_TYPE_CHANGE_ROOM, eventHandle);
+				server.addEventListener(Define.EV_TYPE_ROOM_ADD, eventHandle);
+				server.addEventListener(Define.EV_TYPE_USER_LOGIN, eventHandle);
+				server.addEventListener(Define.EV_TYPE_USER_LOGOUT, eventHandle);
+				server.addEventListener(Define.EV_TYPE_USER_ADD, eventHandle);				
+								
+				serverconnect();
+				//this.currentState = 'OnlineState';
+				
+			}
+			
+			private function changeHandler( e:PropertyChangeEvent ):void{
+				if (e.property == 'autostart') {
+					trace( e.source.toString(), e.property, e.newValue, e.oldValue );
+					NativeApplication.nativeApplication.startAtLogin = e.newValue;
+				}
+			}
+			
+			private function serverconnect():void{
+				server.connect(host, port);
+			}
+			
+			[Embed(source='assets/wuxing16.png')]
+			private var icon16:Class;
+			private function addAppIcon():void{
+				//icon16是一个图片文件，大小为16*16
+				this.nativeApplication.icon.bitmaps = [new icon16()];
+				if(NativeApplication.supportsSystemTrayIcon){
+					var systemTrayIcon:SystemTrayIcon = SystemTrayIcon(this.nativeApplication.icon);
+					//创建菜单列表					
+					systemTrayIcon.menu = createSysTrayMenu();
+					systemTrayIcon.addEventListener(MouseEvent.CLICK, function(e:MouseEvent):void{
+						restoreFromSysTray();						
+					});
+					
+				} else if (NativeApplication.supportsDockIcon) {
+					var dockIcon:DockIcon = NativeApplication.nativeApplication.icon as DockIcon;
+					dockIcon.menu = createSysTrayMenu();
+					dockIcon.addEventListener(MouseEvent.CLICK, function(e:MouseEvent):void{
+						restoreFromSysTray();						
+					});
+					//dockIcon.bounce(NotificationType.CRITICAL);
+				}
+			}
+			
+			
+			private function dock():void{
+				this.stage.nativeWindow.visible = false;
+			}
+			
+			//创建系统托盘图标上下文菜单
+			private function createSysTrayMenu():NativeMenu{
+				var menu:NativeMenu = new NativeMenu();
+				var labels:Array = ["打开","","退出程序"];
+				var names:Array = ["mnuOpen","mnuSep1","mnuExit"];
+				for (var i:int = 0;i<labels.length;i++){
+					//如果标签为空的话，就认为是分隔符
+					var menuItem:NativeMenuItem = new NativeMenuItem( labels[i],labels[i]=="");
+					menuItem.name = names[i];
+					menuItem.addEventListener(Event.SELECT, sysTrayMenuHandler );//菜单处理事件
+					menu.addItem( menuItem );               
+				}
+				
+				return menu;
+			}
+			
+			//添加系统托盘菜单事件，根据菜单名称来处理
+			private function sysTrayMenuHandler(event:Event):void{
+				switch(event.target.name){
+					case "mnuOpen"://打开菜单
+						restoreFromSysTray();
+						break;
+					case "mnuExit"://退出菜单
+						appClose();
+						break;
+				}
+			}
+			
+			//恢复
+			private function restoreFromSysTray():void{
+				this.stage.nativeWindow.alwaysInFront = true;
+				this.stage.nativeWindow.visible = true;
+				this.stage.nativeWindow.orderToFront()
+				this.stage.nativeWindow.activate();
+				this.stage.nativeWindow.alwaysInFront = infront;
+			}
+			
+			[Bindable]
+			private var config:XML;
+			[Bindable]
+			private var rooms:XML;
+			private var faces:XML;
+			private function readLocalXML():void{
+				progressBar.label = "读取本地数据……";
+				var stream:FileStream = new FileStream();
+				
+				//读取配置文件
+				var configxmlfile:File = File.applicationDirectory.resolvePath("data/config.xml");
+				if (configxmlfile.exists) {
+					stream.open(configxmlfile, FileMode.READ);
+					config = XML(stream.readUTFBytes(stream.bytesAvailable)).normalize();
+					stream.close();
+					username = config.username;
+					if (config.password) {
+						var base64:Base64Decoder = new Base64Decoder;
+						base64.decode(config.password);
+						var byteArray:ByteArray = base64.toByteArray();
+						password = byteArray.readUTFBytes(byteArray.length);
+					}
+					
+					remember = String(config.remember).toLowerCase()=='true' ? true : false;
+					infront = String(config.infront).toLowerCase()=='true' ? true : false;
+				}
+				
+				//读取本地房间列表
+				var roomxmlfile:File = File.applicationDirectory.resolvePath("data/room.xml");
+				if (roomxmlfile.exists) {
+					stream.open(roomxmlfile, FileMode.READ);
+					rooms = XML(stream.readUTFBytes(stream.bytesAvailable)).normalize();
+					stream.close();
+				}
+				
+				//读取本地表情列表
+				var facexmlfile:File = File.applicationDirectory.resolvePath("data/face.xml");
+				if (facexmlfile.exists) {
+					stream.open(facexmlfile, FileMode.READ);
+					faces = XML(stream.readUTFBytes(stream.bytesAvailable)).normalize();
+					stream.close(); 
+				}
+				
+			}
+			
+			private function saveLocalXML():void{
+				trace('保存文件');
+				var stream:FileStream = new FileStream();
+				var xmlheader:String = '<?xml version="1.0" encoding="utf-8"?>'+File.lineEnding;
+				var outputString:String = '';
+				
+				//保存配置文件
+				var configxmlfile:File = new File(File.applicationDirectory.resolvePath("data/config.xml").nativePath);
+				stream.open(configxmlfile, FileMode.WRITE);
+				stream.writeUTFBytes(xmlheader);
+				
+				config.username = username;
+				if (remember) {					
+					var base64:Base64Encoder = new Base64Encoder;
+					base64.encode(password);
+					
+					config.password = base64.toString();
+				} else {
+					config.password = '';
+				}
+				config.remember = remember.toString();
+				config.infront = infront.toString();
+				
+				outputString = config.toXMLString();
+				//outputString = outputString.replace(/\n/g, File.lineEnding);
+				stream.writeUTFBytes(outputString);
+				stream.close();
+				
+				//保存聊天室列表
+				var roomxmlfile:File = new File(File.applicationDirectory.resolvePath("data/room.xml").nativePath);
+				stream.open(roomxmlfile, FileMode.WRITE);
+				stream.writeUTFBytes(xmlheader);
+				outputString = rooms.toXMLString();
+				stream.writeUTFBytes(outputString);
+				stream.close();
+			}
+			
+			private function moveDirectory():void{
+				var source:File=File.desktopDirectory.resolvePath("originalDirectory");
+				var destination:File=File.desktopDirectory.resolvePath("movedDirectory/originalDirectory");
+				try{
+					source.moveTo(destination);
+				}catch(error:Error){
+					trace(error.message);
+				}
+			}
+			
+			private function saveHistory(username:String, message:String):void
+			{
+				var stream:FileStream = new FileStream();
+				var xmlfile:File = new File(File.applicationDirectory.resolvePath("data/history/"+username+".xml").nativePath);
+				stream.open(xmlfile, FileMode.APPEND);
+				stream.writeUTFBytes(message);
+				stream.close();
+			}
+			
+			private function eventHandle(e:SocketConnectionEvent):void
+			{
+				trace('eventHandle', e.type, e.body.toString());
+				var o:XML = e.body;
+				
+				var msgStr:String;
+				var date:Date;
+				var dateStr:String;
+				var i:int;
+				if (o.attribute('timestamp').length()==1) {
+					date = new Date(int(o.attribute('timestamp')) * 1000);
+				} else {
+					date = new Date();
+				}
+				dateStr = '<font color="#999999">[' + date.hours + ':' + date.minutes + ':' + date.seconds + ']</font>';
+
+				var regex:RegExp = new RegExp("\\n", "gi");
+				if (o.child('body').length()==1) {
+					msgStr = o.body.toString();
+					msgStr = msgStr.replace(regex, "<br>");
+				}
+				
+				switch(e.type)
+				{
+					case Define.CONNECTING:
+						this.currentState = 'ProgressState';
+						break;
+					case Define.CONNECT:
+						this.currentState = 'LoginState';
+						break;
+					case Define.CLOSE:
+						this.currentState = 'CloseState';
+						break;
+					case Define.EV_TYPE_AUTH_SUCCESS:
+						this.currentState = 'OnlineState';
+						server.username = o.@username;
+						server.getRoomList();
+						break;
+					case Define.EV_TYPE_AUTH_FAILURE:
+						var alert:Alert = Alert.show(o.@message, "登陆验证", Alert.YES, this.mainTitleWindow);
+						alert.addEventListener(MouseEvent.MOUSE_DOWN, alert_mouseDown, true);
+						
+						break;
+					case Define.EV_TYPE_AUTH_OTHER_LOGIN:
+						
+						break;
+					case Define.EV_TYPE_ROOM_ADD:
+						/*
+						if (o.@roomid==0) {
+							delete rooms.*;//删除所有已有子节点
+						}
+						*/
+						//trace(rooms.room.(attribute ("id")==o.@roomid) is XMLList);
+						//trace(rooms.room.(attribute ("id")==o.@roomid) is XML);
+						//trace(rooms.room.(attribute ("id")==o.@roomid).length());
+						if (rooms.room.(attribute ("id")==o.@roomid).length()>0) {
+							rooms.room.(attribute ("id")==o.@roomid).@name = o.@name;
+						} else {
+							rooms.appendChild(new XML('<room id="'+o.@roomid+'" name="'+o.@name+'"/>'));
+						}
+						break;
+					case Define.EV_TYPE_USER_LOGOUT:
+						if (o.attribute('username').length()>0) {
+							roomWindow.removeUser(o.attribute('username'));
+						}						
+						break;
+					case Define.EV_TYPE_USER_LOGIN:
+					case Define.EV_TYPE_USER_ADD:
+						if (o.attribute('username').length()>0) {
+							roomWindow.addUser(o.attribute('username'));
+						}
+						break;
+					case Define.EV_TYPE_SYSTEM_MESSAGE:							
+						msgStr = '【<b>消息：</b>' + msgStr + '】' + dateStr;
+						roomWindow.recvMessage(msgStr);
+						break;
+					
+					case Define.EV_TYPE_PRIVATE_MESSAGE:
+						var ismy:Boolean = o.attribute('from').toString()==server.username;
+						var formusername:String = !ismy ? o.attribute('from').toString() : o.attribute('to').toString();
+						saveHistory(formusername, o.toXMLString()+File.lineEnding);
+						var chatWindow:ChatWindow = openChatWindow(formusername);
+						var color:String = "#FF6600";
+						if (!ismy) {
+							color = "#00AAFF";
+						}
+						msgStr = '<font color="'+color+'"><b>' + o.attribute('from') + '</b></font> 说：<br/>' + msgStr + '<br>' + dateStr;
+						chatWindow.recvMessage(msgStr);
+						break;
+					case Define.EV_TYPE_PUBLIC_MESSAGE:	
+						msgStr = '<font color="#FF6600"><b>' + o.attribute('from') + '</b></font> 说：<br/>' + msgStr + '<br>' + dateStr;
+						
+						roomWindow.recvMessage(msgStr);
+						break;
+					case Define.EV_TYPE_CHANGE_ROOM:
+						roomWindow.users.removeAll();
+						msgStr = '<font color="#FF9900">【欢迎您来到'+o.attribute('name')+'】</font>';
+						
+						roomWindow.recvMessage(msgStr);
+						break;					
+					
+				}
+			}
+			
+			//改变alert鼠标按下事件
+			private function alert_mouseDown(evt:MouseEvent):void {
+				evt.stopImmediatePropagation();
+			}
+			
+			[Bindable]public var roomSelectedNode:XML;
+			//房间列表初始化完成，注册事件监听
+			private function roomlistComplete():void{
+				//this.roomlistTree.addEventListener(Event.CHANGE, onRoomSelect);
+				this.roomlistTree.addEventListener(ListEvent.ITEM_DOUBLE_CLICK, onRoomDoubleClick);
+			}
+			
+			//房间列表选中
+			private function onRoomSelect(e:Event):void{
+				var tree:Tree = Tree(e.target);
+				roomSelectedNode = tree.selectedItem as XML;
+				var itemIsBranch:Boolean = tree.dataDescriptor.isBranch(tree.selectedItem);
+				if (!itemIsBranch) {
+					//selectedNode.@* == selectedNode.attributes() 
+					//selectedNode.attributes()[0].name()					
+					//openRoomWindow();
+				}
+			}
+			
+			private function onRoomDoubleClick(e:ListEvent):void {
+				var tree:Tree = Tree(e.target);
+				roomSelectedNode = tree.selectedItem as XML;
+				var itemIsBranch:Boolean = tree.dataDescriptor.isBranch(tree.selectedItem);
+				if (!itemIsBranch) {
+					openRoomWindow(roomSelectedNode.attribute("id"), roomSelectedNode.attribute("name"));
+				} else {
+					var isOpen:Boolean = tree.isItemOpen(roomSelectedNode);
+					tree.expandItem(roomSelectedNode, !isOpen);
+				}
+			}
+			
+			//打开公聊窗口
+			public function openRoomWindow(id:int, name:String):void{
+				if (!roomWindow || roomWindow.closed) {
+					roomWindow = new RoomWindow;
+					roomWindow.parentWindow = this;
+					roomWindow.server = server;
+					roomWindow.faces = faces;
+					//roomWindow.visible = false;
+					roomWindow.open(true);
+				} else {
+					roomWindow.visible = true;
+					roomWindow.activate();
+				}
+				roomWindow.roomname = name;
+				server.joinRoom(id);
+			}
+			
+			//打开私聊窗口
+			private var chatRooms:Dictionary = new Dictionary;
+			public function openChatWindow(username:String):ChatWindow{
+				trace('openChatWindow');
+				var chatWindow:ChatWindow;
+				if (chatRooms[username] is ChatWindow) {
+					chatWindow = chatRooms[username];
+				}
+				if (!chatWindow || chatWindow.closed){
+					
+					chatRooms[username] = null;
+					
+					chatWindow = new ChatWindow;
+					chatWindow.id = chatWindow.name = username;
+					chatWindow.server = server;
+					chatWindow.faces = faces;
+					chatWindow.username = username;
+					chatWindow.open(true);
+					
+					chatRooms[username] = chatWindow;
+				} else {
+					chatWindow.visible = true;
+					//chatWindow.orderToFront();
+				}
+				return chatWindow;
+			}
+			
+			//拖动
+			public function moveArea_mouseHandler(e:MouseEvent):void{
+				if (e.target == mainTitleWindow.moveArea) {
+					this.stage.nativeWindow.startMove();
+				}
+			}
+			
+			//登录
+			
+			[Bindable]
+			private var allowanonymous:Boolean = false;
+			public function login():void{
+				progressBar.label = "登陆验证……";
+				if (allowanonymous) {
+					server.anonymousAuth();
+				} else {
+					server.auth(username, password);//, 0
+				}
+			}
+			
+			//退出
+			public function logout():void{
+				this.currentState = 'LoginState';
+				server.logout();
+				saveLocalXML();
+				var windows:Array =NativeApplication.nativeApplication.openedWindows;
+				for(var i:Number = 1; i < windows.length; i++) {//从第二个窗口开始关闭
+					windows[i].close();
+				}
+			}
+			
+			protected function nativeWindow_closeHandler(event:Event):void
+			{
+				//取消事件的默认行为				
+				event.preventDefault();				
+				Alert.yesLabel="退出";
+				Alert.noLabel="最小化";
+				var alert:Alert = Alert.show("退出或者最小化到系统托盘？", "系统提示", Alert.YES|Alert.NO|Alert.CANCEL, this, alertCloseHandler);
+				alert.addEventListener(MouseEvent.MOUSE_DOWN, alert_mouseDown, true);
+			}
+			
+			//关闭窗体的事件
+			public function alertCloseHandler(event:CloseEvent):void{
+				if(event.detail==Alert.YES){
+					appClose();
+				}else if(event.detail==Alert.NO){
+					dock();
+				}
+			} 
+			
+			protected function appClose():void
+			{		
+				logout();
+				this.stage.nativeWindow.close();
+				this.exit();
+			}
+
+			protected function reg_clickHandler(event:MouseEvent):void
+			{
+				navigateToURL(new URLRequest("http://love.myleft.org"), "_blank");
+			}
+
+		]]>
+	</fx:Script>
+	<s:states>
+		<s:State name="LoginState"/>
+		<s:State name="OnlineState"/>
+		<s:State name="ProgressState"/>
+		<s:State name="CloseState"/>
+	</s:states>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->		
+	</fx:Declarations>
+	<s:TitleWindow id="mainTitleWindow" left="0" right="0" top="0" bottom="0" title="AS3Chat">
+		<s:controlBarContent.LoginState>
+			<fx:Array>
+				<mx:LinkButton label="隐私声明"/>
+				<mx:LinkButton label="御舟工作室"/>
+				<mx:LinkButton label="检查更新" click="checkUpdater()"/>
+			</fx:Array>
+		</s:controlBarContent.LoginState>
+		<s:controlBarContent>
+			<s:DropDownList prompt="在线" width="70" includeIn="OnlineState">
+				<s:ArrayList>
+					<fx:Object value="requestStatuId"  label="在线"/>
+					<fx:Object value="requestStatuId"  label="繁忙"/>
+					<fx:Object value="requestStatuId"  label="隐身"/>
+				</s:ArrayList>
+			</s:DropDownList>
+			<mx:LinkButton label="退出" click="logout()" includeIn="OnlineState"/>		
+		</s:controlBarContent>
+		<s:BorderContainer includeIn="LoginState" horizontalCenter="0" verticalCenter="0" width="210" borderVisible="false">
+			<s:layout>
+				<s:BasicLayout/>
+			</s:layout>
+			<mx:Image top="10" source="assets/logo.png" horizontalCenter="0"/>
+			<mx:Form horizontalCenter="0" textAlign="left" dropShadowVisible="false" top="60">
+				<mx:FormItem label="账户">
+					<s:TextInput text="@{username}" enabled="{!allowanonymous}"/>
+				</mx:FormItem>
+				<mx:FormItem label="密码">
+					<s:TextInput displayAsPassword="true" text="@{password}" enabled="{!allowanonymous}"/>
+				</mx:FormItem>
+				<mx:FormItem>
+					<s:CheckBox label="匿名登录" id="anonymousCheckBox" selected="@{allowanonymous}"/>
+					<s:CheckBox label="记住密码" id="rememberCheckBox" selected="@{remember}" enabled="{!allowanonymous}"/>
+					<s:CheckBox label="窗口总在最前面" id="infrontCheckBox" selected="@{infront}"/>
+					<s:CheckBox label="开机自动运行" id="autoStartCheckBox" selected="@{autostart}"/>
+				</mx:FormItem>
+				<s:HGroup width="100%" paddingLeft="10" paddingRight="10">
+					<s:Button label="登录"  click="login()"/>
+					<mx:Spacer width="100%" height="100%"/>
+					<s:Button label="注册" click="reg_clickHandler(event)"/>
+				</s:HGroup>
+			</mx:Form>
+		</s:BorderContainer>
+		<s:Group includeIn="OnlineState" top="10" left="10" right="10" height="42">
+			<mx:Image source="assets/wuxing48.png" left="0" top="0" width="42" height="42"/>
+			<mx:LinkButton label="{server.username}" textAlign="left" fontWeight="bold" top="0" left="52" right="10"/>
+			<mx:LinkButton label="走过1999" fontWeight="normal" fontStyle="italic" right="10" left="52" top="20" textAlign="left"/>
+		</s:Group>
+		<mx:TabNavigator includeIn="OnlineState" top="60" left="10" bottom="10" right="10" borderVisible="true" paddingTop="0">
+			<s:NavigatorContent label="联系人" width="100%" height="100%">
+				<mx:Tree labelField="@label" left="0" right="0" top="0" bottom="0" borderVisible="false">
+					<fx:XMLList id="treeData">
+						<node label="我的好友">
+							<node label="Professional"/>
+							<node label="Personal"/>
+						</node>
+						<node label="同事">
+							<node label="Professional"/>
+							<node label="Personal"/>
+						</node>
+						<node label="家人">
+							<node label="Professional"/>
+							<node label="Personal"/>
+						</node>
+						<node label="陌生人">
+							<node label="Professional"/>
+							<node label="Personal"/>
+						</node>
+						<node label="黑名单">
+							<node label="Professional"/>
+							<node label="Personal"/>
+						</node>
+					</fx:XMLList>
+				</mx:Tree>
+			</s:NavigatorContent>
+			<s:NavigatorContent label="房间" width="100%" height="100%">
+				<mx:Tree id="roomlistTree" doubleClickEnabled="true" dataProvider="{rooms}" showRoot="false" labelField="@name" left="0" right="0" top="0" bottom="0" borderVisible="false" creationComplete="roomlistComplete()"/>
+			</s:NavigatorContent>
+		</mx:TabNavigator>
+		<s:Button includeIn="CloseState" label="服务端断开，重新连接" horizontalCenter="0" verticalCenter="0" click="serverconnect()"/>
+	</s:TitleWindow>
+	<mx:ProgressBar includeIn="ProgressState" horizontalCenter="0" verticalCenter="0" id="progressBar"/>
+</s:WindowedApplication>

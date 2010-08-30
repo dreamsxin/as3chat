@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Window xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" 
+		  xmlns:mx="library://ns.adobe.com/flex/mx" 
+		  xmlns:controls="org.myleft.controls.*" 
+		  xmlns:controls1="myleft.org.controls.controls.*" 
+		  width="600" height="450" title="{roomname}" systemChrome="none" transparent="true" showStatusBar="false" resizable="false" creationComplete="init()">
+	<fx:Script>
+		<![CDATA[
+			import flashx.textLayout.conversion.TextConverter;
+			import flashx.textLayout.elements.FlowElement;
+			import flashx.textLayout.elements.TextFlow;
+			import flashx.textLayout.events.CompositionCompleteEvent;
+			
+			import mx.collections.ArrayList;
+			import mx.collections.IList;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.events.ItemClickEvent;
+			import mx.events.ListEvent;
+			import mx.events.PropertyChangeEvent;
+			
+			import org.myleft.core.MyleftServer;
+			import org.myleft.data.Define;
+			import org.myleft.data.User;
+			import org.myleft.events.SocketConnectionEvent;
+			
+			import spark.core.IViewport;
+			import spark.events.IndexChangeEvent;
+			import spark.layouts.VerticalAlign;
+
+			public var server:MyleftServer;
+			public var parentWindow:AS3ChatDesktop;
+			[Bindable]
+			public var roomname:String;
+			[Bindable]
+			public var users:ArrayList = new ArrayList;
+			private function init():void{
+				var myStyleManager:IStyleManager2 = myStyleManager = StyleManager.getStyleManager(this.moduleFactory);
+				myStyleManager.getStyleDeclaration("global").setStyle("fontSize", 12);
+				myStyleManager.getStyleDeclaration("mx.controls.ToolTip").setStyle("fontSize", 12);
+				//this.roomTitleWindow.closeButton.visible=false;
+
+				//this.addEventListener( PropertyChangeEvent.PROPERTY_CHANGE, changeHandler );
+
+				//关闭
+				roomTitleWindow.addEventListener(CloseEvent.CLOSE, closeHandler);
+				this.stage.nativeWindow.addEventListener(Event.CLOSING, nativeWindow_closeHandler);
+				
+				//居中
+				this.stage.nativeWindow.x = (Capabilities.screenResolutionX - this.stage.nativeWindow.width) / 2;
+				this.stage.nativeWindow.y = (Capabilities.screenResolutionY - this.stage.nativeWindow.height) / 2;
+				//拖动
+				roomTitleWindow.moveArea.addEventListener(MouseEvent.MOUSE_DOWN, onStartMove);
+				
+				//最大化 还原
+				roomTitleWindow.moveArea.doubleClickEnabled = true;
+				roomTitleWindow.moveArea.addEventListener(MouseEvent.DOUBLE_CLICK, onDoubleClick);
+				
+				//表情选择
+				face.addEventListener(ItemClickEvent.ITEM_CLICK, faceItemClick);
+			}
+			
+			
+			private function onUserDoubleClick(e:MouseEvent):void {
+				
+				var user:User = userlist.selectedItem as User;
+				parentWindow.openChatWindow(user.username);
+
+			}
+			
+			//关闭窗口
+			private function closeHandler(e:CloseEvent):void{
+				var closeEvent:Event = new Event(Event.CLOSING,true,true);
+				this.stage.nativeWindow.dispatchEvent(closeEvent);
+			}
+			
+			protected function nativeWindow_closeHandler(event:Event):void
+			{
+				users.removeAll();
+				server.leaveRoom();
+				//this.stage.nativeWindow.visible = false;
+				this.stage.nativeWindow.close();
+			}
+			
+			private function changeHandler( e:PropertyChangeEvent ):void{
+				if (e.property == 'roomid') {
+					trace( e.source.toString(), e.property, e.newValue, e.oldValue );
+				}
+			}
+			
+			private function faceItemClick(event:ItemClickEvent):void
+			{
+				messageinput.text += event.item.value;
+			}
+			
+			[Bindable]
+			public var _faces:XML;
+			public function get faces():XML
+			{
+				return _faces;
+			}
+			
+			public function set faces(value:XML):void
+			{
+				_faces = value;
+			}
+			
+			public function addUser(username:String):void
+			{
+				users.addItem(new User(username));
+			}
+			
+			public function removeUser(username:String):void
+			{
+				for(var i:int=0; i<users.length; i++) {
+					var user:User = users.getItemAt(i) as User;
+					if (user.username==username) {
+						users.removeItem(user);
+						break;
+					}
+				}
+			}
+			
+			public function recvMessage(message:String):void
+			{
+				//任务栏闪烁
+				this.nativeWindow.notifyUser(NotificationType.CRITICAL);
+				var flow:TextFlow = TextConverter.importToFlow(face.emotions(message), TextConverter.TEXT_FIELD_HTML_FORMAT);
+				appendChid(flow);
+			}
+			
+			protected function onStartMove(e:MouseEvent):void{
+				if (e.target == roomTitleWindow.moveArea) {
+					this.stage.nativeWindow.startMove();
+				}
+			}
+			
+			protected function onDoubleClick(e:MouseEvent):void{
+				if (this.stage.nativeWindow.displayState!=NativeWindowDisplayState.MAXIMIZED) {
+					this.stage.nativeWindow.maximize();
+				} else {
+					this.stage.nativeWindow.restore();
+				}
+			}
+
+			protected function buttonbar_changeHandler(e:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (ButtonBar(e.target).selectedIndex==-1) {
+					this.stage.nativeWindow.restore();
+				} else {
+					switch(ButtonBar(e.target).selectedItem.action) {
+						case 'maximize':
+							this.stage.nativeWindow.maximize();
+							break;
+						case 'minimize':
+							this.stage.nativeWindow.minimize();
+							break;
+						case 'close':
+							closeHandler(null);
+							break;
+					}
+				}
+			}
+			private var allmessage:String = '';
+			private function sendMessage():void{
+				//allmessage += messageinput.text;
+				if (messageinput.text.length>0) {
+					server.sendPublicMessage(messageinput.text.toString());
+					messageinput.text = '';
+				}
+			}
+			
+			private function appendChid(flow:TextFlow):void{
+				var len:int = flow.numChildren;
+				for (var i:int=0; i<len;)
+				{
+					chattext.textFlow.addChildAt(i++, flow.getChildAt(0));//.deepCopy() 这里不能使用deepCopy深度复制
+				}
+				
+				//chattext.textFlow.flowComposer.updateAllControllers();
+				//chattext.textFlow.flowComposer.compose();
+			}
+
+		]]>
+	</fx:Script>
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	<s:states>
+		<s:State name="State1"/>
+	</s:states>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:TitleWindow id="roomTitleWindow" title="{roomname}" left="0" right="0" top="0" bottom="0">
+		<s:controlBarContent>
+			<mx:Spacer width="100%" height="100%"/>
+			<s:ButtonBar change="buttonbar_changeHandler(event)">
+				<s:dataProvider>
+					<s:ArrayCollection>
+						<fx:Object label="最小化" action="minimize" />
+						<fx:Object label="最大化" action="maximize" />
+					</s:ArrayCollection>
+				</s:dataProvider>				
+			</s:ButtonBar>		
+			<s:Button label="发送" click="sendMessage()"/>
+		</s:controlBarContent>
+		<mx:HDividedBox left="5" right="5" top="5" bottom="5">
+			<s:Group id="leftPanel" width="150" minWidth="120" maxWidth="200" height="100%">
+				<s:List id="userlist" doubleClickEnabled="true" doubleClick="onUserDoubleClick(event)" dataProvider="{users}" left="0" bottom="0" top="0" right="0"></s:List>
+			</s:Group>
+			<s:VGroup id="rightPanel" height="100%" gap="0">
+				<s:TextArea id="chattext" width="100%" height="100%"/>
+				<s:HGroup height="25" width="100%" verticalAlign="middle">
+					<mx:ColorPicker/>
+					<s:NumericStepper minimum="6" maximum="70" stepSize="1"/>
+					<mx:DateField/>
+					<controls:FacePicker id="face" dataProvider="{_faces}"/>
+				</s:HGroup>
+				<s:TextArea id="messageinput" height="60" width="100%" maxChars="255"/>
+			</s:VGroup>
+		</mx:HDividedBox>
+	</s:TitleWindow>
+</s:Window>
