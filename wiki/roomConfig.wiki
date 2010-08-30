@@ -1,4 +1,6 @@
 #labels Phase-Implementation
+#房间列表配置说明
+
 rooms = {
 	{name="家居生活馆", anonymous=1, enable=1, visable=1},
 	{name="紫屋魔戀時尚批發", anonymous=1, enable=1, visable=1 },
