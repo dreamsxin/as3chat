@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Window xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" 
+		  xmlns:mx="library://ns.adobe.com/flex/mx" 
+		  xmlns:controls="org.myleft.controls.*" 
+		  xmlns:controls1="myleft.org.controls.controls.*" 
+		  width="450" height="350" systemChrome="none" transparent="true" showStatusBar="false" resizable="false" creationComplete="init()" creationPolicy="all">
+	<fx:Script>
+		<![CDATA[
+			import flashx.textLayout.conversion.TextConverter;
+			import flashx.textLayout.elements.FlowElement;
+			import flashx.textLayout.elements.TextFlow;
+			import flashx.textLayout.events.CompositionCompleteEvent;
+			
+			import mx.binding.utils.BindingUtils;
+			import mx.collections.ArrayList;
+			import mx.collections.IList;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.events.ItemClickEvent;
+			import mx.events.PropertyChangeEvent;
+			
+			import org.myleft.core.MyleftServer;
+			import org.myleft.data.Define;
+			import org.myleft.data.User;
+			
+			import spark.core.IViewport;
+			import spark.events.IndexChangeEvent;
+			import spark.layouts.VerticalAlign;
+			
+			[Bindable]
+			public var server:MyleftServer;			
+			[Bindable]
+			public var username:String;
+			private function init():void{
+				var myStyleManager:IStyleManager2 = myStyleManager = StyleManager.getStyleManager(this.moduleFactory);
+				myStyleManager.getStyleDeclaration("global").setStyle("fontSize", 12);
+				myStyleManager.getStyleDeclaration("mx.controls.ToolTip").setStyle("fontSize", 12);
+				//this.chatTitleWindow.closeButton.visible=false;
+				
+				//关闭
+				chatTitleWindow.addEventListener(CloseEvent.CLOSE, closeHandler);
+				this.stage.nativeWindow.addEventListener(Event.CLOSING, nativeWindow_closeHandler);
+				
+				//居中
+				this.stage.nativeWindow.x = (Capabilities.screenResolutionX - this.stage.nativeWindow.width) / 2;
+				this.stage.nativeWindow.y = (Capabilities.screenResolutionY - this.stage.nativeWindow.height) / 2;
+				//拖动
+				chatTitleWindow.moveArea.addEventListener(MouseEvent.MOUSE_DOWN, onStartMove);
+				
+				//双击 最大化 还原
+				chatTitleWindow.moveArea.doubleClickEnabled = true;
+				chatTitleWindow.moveArea.addEventListener(MouseEvent.DOUBLE_CLICK, onDoubleClick);
+				
+				//表情选择
+				face.addEventListener(ItemClickEvent.ITEM_CLICK, faceItemClick);
+			}
+			
+			//关闭窗口
+			private function closeHandler(e:CloseEvent):void{
+				var closeEvent:Event = new Event(Event.CLOSING,true,true);
+				this.stage.nativeWindow.dispatchEvent(closeEvent);
+			}
+			
+			protected function nativeWindow_closeHandler(event:Event):void
+			{
+				//this.stage.nativeWindow.visible = false;
+				this.stage.nativeWindow.close();
+			}
+			
+			//this.addEventListener( PropertyChangeEvent.PROPERTY_CHANGE, changeHandler );
+			/*
+			private function changeHandler( e:PropertyChangeEvent ):void{
+				if (e.property == 'roomid') {
+					trace( e.source.toString(), e.property, e.newValue, e.oldValue );
+				}
+			}
+			*/
+			private function faceItemClick(event:ItemClickEvent):void
+			{
+				messageinput.text += event.item.value;
+			}
+			
+			[Bindable]
+			public var _faces:XML;
+			public function get faces():XML
+			{
+				return _faces;
+			}		
+			
+			public function set faces(value:XML):void
+			{
+				_faces = value;
+			}
+			
+			public function onStartMove(e:MouseEvent):void{
+				if (e.target == chatTitleWindow.moveArea) {
+					this.stage.nativeWindow.startMove();
+				}
+			}
+			
+			public function onDoubleClick(e:MouseEvent):void{
+				if (this.stage.nativeWindow.displayState!=NativeWindowDisplayState.MAXIMIZED) {
+					this.stage.nativeWindow.maximize();
+				} else {
+					this.stage.nativeWindow.restore();
+				}
+			}
+			
+			private var lastaction:String;
+			protected function buttonbar_changeHandler(e:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (ButtonBar(e.target).selectedIndex==-1) {
+					switch(lastaction) {
+						case 'maximize':
+						case 'minimize':
+							this.stage.nativeWindow.restore();
+							break;
+						case 'history':
+							this.width -= 300;
+							this.currentState = 'State1';
+							break;
+					}
+					lastaction = null;					
+				} else {
+					lastaction = ButtonBar(e.target).selectedItem.action;
+					switch(ButtonBar(e.target).selectedItem.action) {
+						case 'maximize':
+							this.stage.nativeWindow.maximize();
+							break;
+						case 'minimize':
+							this.stage.nativeWindow.minimize();
+							break;
+						case 'close':
+							closeHandler(null);
+							break;
+						case 'history':
+							this.width += 300;
+							this.currentState = 'history';
+							readHistoryXML();
+							break;
+					}
+				}
+			}
+			private function readHistoryXML():void{
+				var stream:FileStream = new FileStream();
+
+				var historyxmlfile:File = File.applicationDirectory.resolvePath("data/history/"+username+".xml");
+				if (!historyxmlfile.exists) return;
+				stream.open(historyxmlfile, FileMode.READ);
+				var historyxml:XMLList = XMLList(stream.readUTFBytes(stream.bytesAvailable)).normalize();
+				stream.close();
+				removeChid(historytext);
+				for each (var o:XML in historyxml) {
+					historyxml[0];
+					var msgStr:String;
+					var date:Date;
+					var dateStr:String;
+					var i:int;
+					if (o.attribute('timestamp').length()==1) {
+						date = new Date(int(o.attribute('timestamp')) * 1000);
+					} else {
+						date = new Date();
+					}
+					dateStr = '<font color="#999999">[' + date.fullYear + '年' + date.month + '月' + date.date + '日 ' + date.hours + ':' + date.minutes + ':' + date.seconds + ']</font>';
+					
+					var regex:RegExp = new RegExp("\\n", "gi");
+					if (o.child('body').length()==1) {
+						msgStr = o.body.toString();
+						msgStr = msgStr.replace(regex, "<br>");
+						var ismy:Boolean = o.attribute('from').toString()==server.username;
+						var formusername:String = !ismy ? o.attribute('from').toString() : o.attribute('to').toString();
+						var color:String = "#FF6600";
+						if (!ismy) {
+							color = "#00AAFF";
+						}
+						msgStr = '<font color="'+color+'"><b>' + o.attribute('from') + '</b></font> 说：<br/>' + msgStr + '<br>' + dateStr;
+						var flow:TextFlow = TextConverter.importToFlow(face.emotions(msgStr), TextConverter.TEXT_FIELD_HTML_FORMAT);
+						appendChid(flow, historytext);
+					}
+				}			
+			}
+			
+			private var allmessage:String = '';
+			private function sendMessage():void{
+				if (messageinput.text.length>0) {
+					server.sendPrivateMessage(username, messageinput.text.toString());
+					messageinput.text = '';
+				}
+			}			
+			
+			public function recvMessage(message:String):void
+			{
+				//任务栏闪烁
+				this.nativeWindow.notifyUser(NotificationType.CRITICAL);
+				var flow:TextFlow = TextConverter.importToFlow(face.emotions(message), TextConverter.TEXT_FIELD_HTML_FORMAT);
+				appendChid(flow, chattext);
+			}
+			
+			private function appendChid(flow:TextFlow, text:TextArea):void{
+				var len:int = flow.numChildren;
+				for (var i:int=0; i<len;)
+				{
+					text.textFlow.addChildAt(i++, flow.getChildAt(0));//.deepCopy() 这里不能使用deepCopy深度复制
+				}
+			}
+			
+			private function removeChid(text:TextArea):void{
+				while (text.textFlow.numChildren)
+				{
+					text.textFlow.removeChildAt(0);
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	<s:states>
+		<s:State name="State1"/>
+		<s:State name="history"/>
+	</s:states>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:TitleWindow id="chatTitleWindow" title="聊天中" left="0" right="0" top="0" bottom="0">
+		<s:controlBarContent>
+			<mx:Spacer width="100%" height="100%"/>
+			<s:ButtonBar change="buttonbar_changeHandler(event)">
+				<s:dataProvider>
+					<s:ArrayCollection>
+						<fx:Object label="最小化" action="minimize" />
+						<fx:Object label="最大化" action="maximize" />
+						<fx:Object label="查看历史记录" action="history" />
+					</s:ArrayCollection>
+				</s:dataProvider>				
+			</s:ButtonBar>		
+			<s:Button label="发送" click="sendMessage()"/>
+		</s:controlBarContent>
+		<s:Group left="5" top="5" bottom="5" right="5">
+			<s:HGroup width="100%" x="0" height="100%" gap="1">
+				<s:VGroup width="120" height="100%" horizontalAlign.State1="center">
+					<mx:LinkButton label="{username}" color.State1="#00AAFF"/>
+					<mx:Image includeIn="State1" source="assets/pig120.gif" width="100" height="100"/>
+					<mx:LinkButton label="{server.username}" color.State1="#FF6600"/>
+					<mx:Image includeIn="State1" source="assets/wuxing48.png"/>
+				</s:VGroup>				
+				<s:VGroup width="100%" height="100%">
+					<s:TextArea id="chattext" width="100%" x="0" height="100%" y="0"/>
+					<s:HGroup height="25" width="100%" verticalAlign="middle">
+						<mx:ColorPicker/>
+						<s:NumericStepper minimum="6" maximum="70" stepSize="1"/>
+						<controls:FacePicker id="face" dataProvider="{_faces}"/>
+					</s:HGroup>
+					<s:TextArea id="messageinput" height="60" width="100%" maxChars="255"/>
+				</s:VGroup>
+				<s:Group width="300" height="100%" includeIn="history">
+					<s:TextArea left="0" right="0" top="0" bottom="0" id="historytext"/>
+					
+				</s:Group>
+			</s:HGroup>
+		</s:Group>
+	</s:TitleWindow>
+</s:Window>
