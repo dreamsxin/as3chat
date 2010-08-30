@@ -98,9 +98,17 @@ package org.myleft.core
 		public function send( message:String ):void
 		{
 			if ( socket.connected ) {
-	
+				
+				var bytes:ByteArray = new ByteArray();
+				//bytes.endian = Endian.BIG_ENDIAN;
+				bytes.writeUTFBytes(message);
+				bytes.compress();
+				
+				var endbytes:ByteArray = new ByteArray();
+				endbytes.writeUnsignedInt(bytes.length);
+				endbytes.writeBytes(bytes);
 				try {
-					socket.writeUTFBytes(message);
+					socket.writeBytes(endbytes);//writeUTFBytes(message);
 				} catch (e:IOError) {
 					trace(e);
 				}
@@ -163,11 +171,43 @@ package org.myleft.core
 		{
 			
 			trace('socket.bytesAvailable', socket.bytesAvailable);
+			var str:String = "";
 			while (socket.bytesAvailable > 0) {
-				var bytedata:ByteArray = new ByteArray();
-				socket.readBytes( bytedata );
-				parseDataReceived(bytedata);		
+				if (isHeader == true) {
+					if (socket.bytesAvailable>=4) {
+						msgLength = socket.readUnsignedInt();
+						if (msgLength>0) isHeader = false;
+					} else {
+						break;
+					}
+				} else {
+					if (socket.bytesAvailable >= msgLength) {
+						socket.readBytes(msgBody, 0, msgLength);
+						
+						uncompress(msgBody);
+						msgBody.clear();
+						msgLength = 0;
+						isHeader = true;
+					} else {
+						break;
+					}
+				}
 			}
+		}
+		
+		private function uncompress(bytedata:ByteArray):void {
+			var e:SocketConnectionEvent;
+			try{
+				bytedata.position = 0;
+				bytedata.uncompress();
+				e = new SocketConnectionEvent(Define.DECODE_OK);
+				dispatchEvent( e );
+			} catch (error:Error) {
+				e = new SocketConnectionEvent(Define.DECODE_ERROR);
+				dispatchEvent( e );
+				
+			}
+			parseDataReceived(bytedata);
 		}
 		
 		private function parseDataReceived( bytedata:ByteArray ):void
