@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flexLibProperties includeAllClasses="true" version="3">
+  <includeClasses>
+    <classEntry path="org.myleft.events.UIEvent"/>
+    <classEntry path="org.myleft.events.SocketConnectionEvent"/>
+    <classEntry path="org.myleft.data.User"/>
+    <classEntry path="org.myleft.core.SocketConnection"/>
+    <classEntry path="org.myleft.data.Define"/>
+    <classEntry path="org.myleft.core.MyleftServer"/>
+    <classEntry path="org.myleft.controls.facePickerClasses.SwatchPanel"/>
+    <classEntry path="org.myleft.controls.facePickerClasses.faceItemRenderer"/>
+    <classEntry path="org.myleft.events.AutoUpdaterEvent"/>
+  </includeClasses>
+  <includeResources/>
+  <namespaceManifests/>
+</flexLibProperties>
