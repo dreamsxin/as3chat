@@ -8,5 +8,5 @@ rooms = {
 	{name="七弦琴", anonymous=1, enable=1, visable=1},
 	{name="私房6号", anonymous=1, enable=1, visable=1},
 	{name="私房7号", anonymous=1, enable=1, visable=0},
-	{name="私房8号", anonymous=1, enable=1, visable=1},
+	{name="私房8号", anonymous=0, enable=1, visable=1},
 };
