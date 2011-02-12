@@ -9,15 +9,14 @@
 #define	EXCEPTION_H
 #include <iostream>
 #include <string>
-using namespace std;
 
 class Exception {
 public:
-    Exception(string message, int number = -1, int code = -1) throw ();
+    Exception(std::string message, int number = -1, int code = -1) throw ();
     virtual ~Exception() throw ();
     virtual const char * what() const throw ();
 private:
-    string _message;
+    std::string mMessage;
 };
 #endif	/* EXCEPTION_H */
 

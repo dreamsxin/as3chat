@@ -16,6 +16,10 @@ template <typename T>
 class FifoList {
 public:
     FifoList(int maxSize = -1);
+
+    bool empty() const {
+        return mPackets.empty();
+    }
     void push(const T&packer);
     T pop() throw (std::out_of_range);
 protected:
@@ -34,15 +38,15 @@ FifoList<T>::FifoList(int maxSize) {
 template <typename T>
 void FifoList<T>::push(const T& packet) {
     if (mMaxSize > 0 && mPackets.size() == static_cast<size_t> (mMaxSize)) {
-        return;
+        throw (std::out_of_range("List is large max size"));
     }
     mPackets.push(packet);
 }
 
 template <typename T>
-T FifoList<T>::pop()throw(std::out_of_range) {
-    if (mPackets.empty()){
-        throw (std::out_of_range("Buffer is empty"));
+T FifoList<T>::pop()throw (std::out_of_range) {
+    if (mPackets.empty()) {
+        throw (std::out_of_range("List is empty"));
     }
     T temp = mPackets.front();
     mPackets.pop();
