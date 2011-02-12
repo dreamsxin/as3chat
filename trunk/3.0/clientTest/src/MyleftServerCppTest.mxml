@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" applicationComplete="init()">
+	<mx:Script>
+		<![CDATA[
+			[Bindable]
+			public var connected:Boolean;
+			public var socket:Socket;
+			public var keepAlive:Timer;
+			public function init():void{
+				connected = false;
+				socket = new Socket;
+			
+				socket.addEventListener(Event.CONNECT, socketEventFunction);
+				socket.addEventListener(Event.CLOSE, socketEventFunction);
+				
+				socket.addEventListener(Event.ACTIVATE, socketEventFunction);
+				socket.addEventListener(IOErrorEvent.IO_ERROR, socketIOErrorEventFunction);
+				socket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, socketSecurityErrorEventFunction);
+				
+				socket.addEventListener(ProgressEvent.SOCKET_DATA, socketRecvFunction);
+				
+				keepAlive = new Timer(10000);
+	  			keepAlive.addEventListener(TimerEvent.TIMER, onKeepAliveLoop);
+			}			
+			
+			public function debug(log:String):void
+			{
+				this.recv.text = log + "\n" + this.recv.text;
+			}
+			
+			public function connect():void
+			{
+				if (!socket.connected) {
+					socket.connect(server.text, int(port.text));
+					debug("connect");
+				}
+			}
+	
+			public function disconnect():void
+			{
+				if (socket.connected) {
+					socket.close();
+					connected = false;
+					debug("disconnect");
+				}
+			}
+			
+			public function sendMessage():void
+			{
+				if (socket.connected && send.text.length>0) {
+					socket.writeInt(send.text.length);
+					socket.writeUTFBytes(send.text);
+					socket.flush();
+					debug("sendMessage");
+				} else {
+					debug("send length <= 0");
+				}
+			}
+			
+			public function onKeepAliveLoop(evt:TimerEvent):void
+			{
+			}
+			
+			public function socketEventFunction(event:Event):void
+			{
+				debug("Event:"+event.type);
+				switch (event.type)
+				{
+					case Event.CONNECT:
+						if (socket.connected)
+						{
+							connected = true;
+						}
+						break;
+					case Event.CLOSE:
+						connected = false;
+						break;
+					case Event.ACTIVATE:
+						break;
+					default:
+						break;
+				}
+				
+			}
+			
+			public function socketIOErrorEventFunction(event:IOErrorEvent):void
+			{
+				debug("IOErrorEvent:"+event.type);
+			}
+			
+			
+			public function socketSecurityErrorEventFunction(event:SecurityErrorEvent):void
+			{
+				debug("SecurityErrorEvent:"+event.type)
+			}
+			
+			private var flag:Boolean = true;
+			private var msgLength:uint = 0;
+
+			public function socketRecvFunction(event:ProgressEvent):void
+			{
+				var bytedata:ByteArray = new ByteArray();
+				while (socket.bytesAvailable > 0) {
+					if (flag == true) {
+						if (socket.bytesAvailable>=4) {
+							msgLength = socket.readInt();
+							flag = false;
+						} else {
+							break;
+						}
+					} else {
+						if (socket.bytesAvailable >= msgLength) {
+							socket.readBytes(bytedata, 0, msgLength);
+							debug("Recv:"+bytedata.toString());
+							flag = true;
+						} else {
+							break;
+						}
+					}
+				}
+			}
+		]]>
+	</mx:Script>
+	<mx:Panel layout="absolute" left="10" bottom="10" top="10" right="10" title="MyleftServerCppTest">
+		<mx:HDividedBox left="10" top="10" right="10" bottom="10">
+			<mx:Form height="100%">
+				<mx:FormItem label="地址">
+					<mx:TextInput text="10.5.176.60" id="server"/>
+				</mx:FormItem>
+				<mx:FormItem label="端口">
+					<mx:TextInput text="8080" id="port"/>
+				</mx:FormItem>
+				<mx:FormItem label="发送">
+					<mx:TextArea id="send"/>
+				</mx:FormItem>
+				<mx:ControlBar>
+					<mx:Button label="连接" click="connect()" enabled="{!connected}"/>
+					<mx:Button label="发送" click="sendMessage()" enabled="{connected}"/>
+					<mx:Button label="关闭" click="disconnect()" enabled="{connected}"/>
+				</mx:ControlBar>
+			</mx:Form>
+			<mx:Canvas height="100%">
+				<mx:TextInput id="recv" left="10" right="10" top="10" bottom="10"/>
+			</mx:Canvas>
+		</mx:HDividedBox>
+	</mx:Panel>
+	
+</mx:Application>
