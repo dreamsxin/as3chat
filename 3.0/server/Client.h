@@ -8,6 +8,7 @@
 #ifndef CLIENT_H
 #define	CLIENT_H
 #include <string>
+#include <time.h>
 #include "Socket.h"
 #include "BuddyList.h"
 #include "FifoList.h"
@@ -15,25 +16,31 @@
 class Client : public Socket {
 public:
     Client(int fd, int maxSize = 10);
-    Client(int fd, BuddyList &buddyList, int maxSize = 10);
     virtual ~Client();
 
-    int recv(std::string&);
+    bool send(std::string&) const;
+    bool recv(std::string&);
 
     string getName() const {
         return mName;
     };
-    void addBuddy(const std::string& buddy);
+    void addBuddy(const std::string& group, const std::string& buddy);
     void removeBuddy(const std::string& buddy);
     bool isBuddy(const std::string& buddy) const;
     list<string> getBuddies() const;
 
-    void bufferPacket(const std::string& packer);
-    string getNextPacket();
+    void pushInPacket(const std::string& packer);
+    string getNextInPacket();
+
+    void pushOutPacket(const std::string& packer);
+    string getNextOutPacket();
+
+    int lastresponsetime;
 private:
     string mName;
     BuddyList *mBuddyList;
-    FifoList<string> *mPackets;
+    FifoList<string> *mInPackets;
+    FifoList<string> *mOutPackets;
 };
 
 #endif	/* CLIENT_H */

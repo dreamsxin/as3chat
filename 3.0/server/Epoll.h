@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <sys/epoll.h>
 #include "Exception.h"
+#include "Log.h"
 using namespace std;
 
 class Epoll {

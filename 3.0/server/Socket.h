@@ -19,21 +19,26 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-const int MAXHOSTNAME = 200;
-const int MAXCONNECTIONS = 5;
-const int MAXRECV = 500;
+typedef struct MsgHead{
+        //int ev_type;
+        int length;
+} MsgHead;
+
+//int MSG;  为消息的类型。在发送消息时初始化。
+//int data_total_length; 为消息的总长 （不包括包头，可为0）为0的话 就没有数据只有包头。
+//int data_package_length;  为每一次 发送或接受的 包的大小。与total_length 一起配合可以得到整个数据包的接收或者发送的过程。
 
 class Socket {
 public:
     Socket();
     Socket(const int fd);
-    Socket(const Socket& orig);
+    Socket(const Socket& sock);
 
     virtual Socket & operator =(const Socket & sock) {
         if (this == &sock)
             return *this;
-        this->m_sock = sock.m_sock;
-        this->m_addr = sock.m_addr;
+        this->mSock = sock.mSock;
+        this->mAddr = sock.mAddr;
         return *this;
     }
     virtual ~Socket();
@@ -49,24 +54,29 @@ public:
     void close();
 
     // Data Transimission
-    bool send(const std::string) const;
-    int recv(std::string&) const;
+    int send(void *buf, size_t len) const;
+    int recv(void *buf, size_t len) const;
 
 
     bool set_non_blocking(const bool);
 
     bool is_valid() const {
-        return m_sock != -1;
+        return mSock != -1;
     }
 
-    int get_sockfd() const {
-        return m_sock;
+    int getSock() const {
+        return mSock;
     }
+
+    enum {
+        MAXHOSTNAME = 200,
+        MAXCONNECTIONS = 5,
+        MAXRECV = 500
+    };
 
 private:
-    int m_sock;
-    sockaddr_in m_addr;
-
+    int mSock;
+    sockaddr_in mAddr;
 };
 
 #endif	/* SOCKET_H */

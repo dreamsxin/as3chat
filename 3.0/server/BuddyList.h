@@ -7,21 +7,23 @@
 
 #ifndef BUDDYLIST_H
 #define	BUDDYLIST_H
-#include <map>
 #include <string>
+#include <map>
 #include <list>
-using std::multimap;
-using std::string;
-using std::list;
+using namespace std;
 class BuddyList {
 public:
     BuddyList();
-    void addBuddy(const string& name, const string& buddy);
-    void removeBuddy(const string&name, const string& buddy);
-    bool isBuddy(const string&name, const string& buddy) const;
-    list<string> getBuddies(const string& name) const;
+    virtual ~BuddyList();
+    
+    bool addBuddy(const string& group, const string& buddy);
+    bool removeBuddy(const string& buddy);
+    bool isBuddy(const string& buddy) const;
+    list<string> getBuddies() const;
+    list<string> getBuddies(const string& group) const;
 protected:
-    multimap<string, string> mBuddies;
+    map<string, string> mBuddyGroup;
+    multimap<string, string> mGroupBuddy;
 private:
     BuddyList(const BuddyList& src);
     BuddyList& operator=(const BuddyList& rhs);
