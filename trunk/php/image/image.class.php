@@ -295,7 +295,7 @@ abstract class Image {
      * @param   integer  透明度
      * @return  $this
      */
-    public function watermark(proImage $watermark, $offset_x = NULL, $offset_y = NULL, $opacity = 100) {
+    public function watermark(Image $watermark, $offset_x = NULL, $offset_y = NULL, $opacity = 100) {
         if ($offset_x === NULL) {
             $offset_x = round(($this->width - $watermark->width) / 2);
         } elseif ($offset_x === TRUE) {
@@ -355,7 +355,7 @@ abstract class Image {
      * @param   Oject   遮照图片对象
      * @return  $this
      */
-    public function mask(proImage $mask) {
+    public function mask(Image $mask) {
 	
         $this->_do_mask($mask);
 
@@ -455,7 +455,7 @@ abstract class Image {
      * @param   integer  透明度
      * @return  void
      */
-    abstract protected function _do_watermark(proImage $image, $offset_x, $offset_y, $opacity);
+    abstract protected function _do_watermark(Image $image, $offset_x, $offset_y, $opacity);
 
     /**
      * 设置背景抽象方法
@@ -474,7 +474,7 @@ abstract class Image {
      * @param   object   图片对象
      * @return void
      */
-    abstract protected function _do_mask(proImage $image);
+    abstract protected function _do_mask(Image $image);
 
     /**
      * 保存抽象方法

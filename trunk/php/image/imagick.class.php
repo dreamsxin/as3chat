@@ -106,7 +106,7 @@ class Imagick extends Image {
         return TRUE;
     }
 
-    protected function _do_watermark(proImage $image, $offset_x, $offset_y, $opacity) {
+    protected function _do_watermark(Image $image, $offset_x, $offset_y, $opacity) {
         $watermark = new Imagick();
         $watermark->readImageBlob($image->render());
         $watermark->setImageOpacity($opacity);
@@ -139,7 +139,7 @@ class Imagick extends Image {
         return TRUE;
     }
 
-    protected function _do_mask(proImage $image) {
+    protected function _do_mask(Image $image) {
 	$mask = new Imagick();
         $mask->readImageBlob($image->render());
 

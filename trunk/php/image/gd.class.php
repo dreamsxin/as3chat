@@ -188,7 +188,7 @@ class GD extends Image {
 		$this->height = imagesy($flipped);
 	}
 
-	protected function _do_watermark(proImage $watermark, $offset_x, $offset_y, $opacity)
+	protected function _do_watermark(Image $watermark, $offset_x, $offset_y, $opacity)
 	{
 		$this->_load_image();
 
@@ -228,7 +228,7 @@ class GD extends Image {
 		}
 	}
 
-	protected function _do_mask(proImage $image)
+	protected function _do_mask(Image $image)
 	{
 		$this->_load_image();
 
