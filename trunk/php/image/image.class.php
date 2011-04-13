@@ -6,7 +6,7 @@
  * @email dreamsxin@qq.com
  * @date	2010-12-29
  */
-abstract class Image {
+abstract class Kohana_Image {
     // 缩放模式
     const NONE = 0x01; // 不按照比例
     const WIDTH = 0x02; // 按照比例，以宽度为准
