@@ -7,7 +7,7 @@
  * @email dreamsxin@qq.com
  * @date	2010-12-30
  */
-class Imagick extends Image {
+class Kohana_Image_Imagick extends Image {
 
     protected static $_checked;
     protected $_imagick;
@@ -47,18 +47,7 @@ class Imagick extends Image {
         do {
             $this->_imagick->thumbnailImage($width, $height, true);
         } while ($this->_imagick->nextImage());
-//		$i = 0;
-//		foreach ($this->_imagick as $frame) {
-//			echo 'aaa'.($i++);
-//			// $this->_imagick->thumbnailImage($width, $height, Imagick::FILTER_LANCZOS, 1);
-//			$frame->thumbnailImage($width, $height, true);
-//			// $frame->setImagePage($width, $height, 0, 0);
-//		}
-//		$this->_imagick->coalesceImages();
-//		$this->_imagick->thumbnailImage($width, $height);
-//		$this->_imagick->resizeImage($width, $height, Imagick::FILTER_CATROM, 1, true);
-//		$this->_imagick->resizeImage($width, $height, Imagick::FILTER_LANCZOS, 1);
-
+		
         $this->width = $this->_imagick->getImageWidth();
         $this->height = $this->_imagick->getImageHeight();
         return TRUE;
@@ -107,9 +96,13 @@ class Imagick extends Image {
     }
 
     protected function _do_watermark(Image $image, $offset_x, $offset_y, $opacity) {
+        $opacity = $opacity / 100;
         $watermark = new Imagick();
         $watermark->readImageBlob($image->render());
-        $watermark->setImageOpacity($opacity);
+        if ($opacity!=NULL) {
+            $watermark->setImageOpacity($opacity);
+        }
+
         $this->_imagick->setIteratorIndex(0);
         do {
             $this->_imagick->compositeImage($watermark, Imagick::COMPOSITE_OVER, $offset_x, $offset_y);
@@ -140,12 +133,12 @@ class Imagick extends Image {
     }
 
     protected function _do_mask(Image $image) {
-	$mask = new Imagick();
+		$mask = new Imagick();
         $mask->readImageBlob($image->render());
 
         $this->_imagick->setIteratorIndex(0);
         do {
-	    $this->_imagick->setImageMatte(1); 
+	    $this->_imagick->setImageMatte(1);
             $this->_imagick->compositeImage($mask, Imagick::COMPOSITE_DSTIN, 0, 0);
         } while ($this->_imagick->nextImage());
 
@@ -159,12 +152,12 @@ class Imagick extends Image {
         $extension = pathinfo($file, PATHINFO_EXTENSION);
         $this->_imagick->setImageFormat($extension);
         $this->_imagick->setImageCompressionQuality($quality);
+        $this->_imagick->optimizeImageLayers();
         
         if ($this->_imagick->getNumberImages() > 1 && !in_array(strtolower($extension), array('gif'))) {
             $this->_imagick->setIteratorIndex(0);
             return $this->_imagick->writeImage($file);
-        }
-        $this->_imagick->optimizeImageLayers();
+        }        
         return $this->_imagick->writeImages($file, true);
     }
 
