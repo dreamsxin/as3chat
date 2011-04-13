@@ -6,7 +6,7 @@
  * @email dreamsxin@qq.com
  * @date	2010-12-30
  */
-class GD extends Image {
+class Kohana_Image_GD extends Image {
 
 	// GD库bundled版本标识，
 	protected static $_checked;
