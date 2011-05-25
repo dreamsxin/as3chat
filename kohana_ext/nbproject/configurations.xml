@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="69">
+  <logicalFolder name="root" displayName="root" projectFiles="true">
+    <df name="kohana" root=".">
+      <df name=".libs">
+      </df>
+      <df name="autom4te.cache" kind="SOURCE_LOGICAL_FOLDER">
+      </df>
+      <df name="include" kind="SOURCE_LOGICAL_FOLDER">
+      </df>
+      <df name="modules" kind="SOURCE_LOGICAL_FOLDER">
+      </df>
+      <in>config.h</in>
+      <in>kohana.c</in>
+      <in>php_kohana.h</in>
+    </df>
+    <logicalFolder name="ExternalFiles"
+                   displayName="重要文件"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+      <itemPath>Makefile-kohana.mk</itemPath>
+      <itemPath>configure</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceRootList>
+    <Elem>.</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile-kohana.mk</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <compilerSet>GNU|GNU</compilerSet>
+        <platform>2</platform>
+      </toolsSet>
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>.</buildCommandWorkingDir>
+          <buildCommand>$(MAKE) -f Makefile</buildCommand>
+          <cleanCommand>$(MAKE) -f Makefile clean</cleanCommand>
+          <executablePath></executablePath>
+          <cTool>
+            <incDir>
+              <pElem>/usr/include/php5/Zend</pElem>
+              <pElem>/usr/include/php5/ext</pElem>
+              <pElem>/usr/include/php5</pElem>
+              <pElem>.</pElem>
+              <pElem>/usr/include/php5/main</pElem>
+              <pElem>/usr/include/php5/TSRM</pElem>
+              <pElem>/usr/include/php5/ext/date/lib</pElem>
+              <pElem>include</pElem>
+              <pElem>main</pElem>
+            </incDir>
+            <preprocessorList>
+              <Elem>HAVE_CONFIG_H</Elem>
+              <Elem>_FILE_OFFSET_BITS=64</Elem>
+              <Elem>PHP_ATOM_INC</Elem>
+              <Elem>_LARGEFILE_SOURCE</Elem>
+            </preprocessorList>
+          </cTool>
+        </makeTool>
+      </makefileType>
+    </conf>
+  </confs>
+</configurationDescriptor>
