@@ -1,0 +1,21 @@
+#配置说明
+
+client ：<br />
+<br />
+-------------myleftchatclient.as-----<br />
+private var host:String = 'myleft.org';<br />
+private var port:int = 8222;<br />
+<br />
+server:<br />
+-------------config.conf-------------<br />
+port = 8888           #监听端口<br />
+pthread = 5           #进程数<br />
+dbhost = "localhost"  #数据库服务器IP地址或域名<br />
+dbport = 3306         #数据库端口<br />
+dbuser = "root"       #数据库账户<br />
+dbpass = "123456"     #数据库密码<br />
+dbname = "ucenter"
+dbtable = "uc\_members"<br />
+fieldusername = "username"<br />
+fieldpassword = "password"<br />
+fieldsalt = "salt"<br />
