@@ -10,6 +10,7 @@ SVN:http://as3chat.googlecode.com/svn/tags/<br />
 
 Kohanaforext项目地址<br />
 http://code.google.com/p/kohanaforext<br />
+https://github.com/dreamsxin/CKohana
 
 it's more than just a chat room, chat room is only one of its applications. it can achieve many functions via socket communication. This is what i am trying to implement,which is simple but useful.<br />
 Please write me comments on: <br />
