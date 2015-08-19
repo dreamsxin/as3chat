@@ -1,6 +1,6 @@
 **项目转移：**<br />
 https://github.com/dreamsxin/ARPGClient<br />
-https://github.com/dreamsxin/ARPGServer*
+https://github.com/dreamsxin/ARPGServer
 
 第三版服务器正在开发中<br />
 进度:http://as3chat.googlecode.com/svn/trunk/3.0/server/readme.txt<br />
@@ -30,6 +30,8 @@ http://code.google.com/p/aswing/<br /><br />
 ARPG
 利用了开源的ISO(Isometric)库AS3isolib：<br />
 http://code.google.com/p/as3isolib/<br />
+https://github.com/as3isolib/as3isolib.v1<br />
+
 例子里自带的寻路效率可能不高，所以找到一个A\*寻路的开源库：<br />
 http://code.google.com/p/baseoneaslib/<br />
 <br />
