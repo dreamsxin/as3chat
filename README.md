@@ -45,10 +45,16 @@ email:dreamsxin@126.com<br />
 vivian - 服务端带宽<br />
 zyl    - 移动平台技术支持<br />
 
-![http://as3chat.googlecode.com/files/arpg2.jpg](http://as3chat.googlecode.com/files/arpg2.jpg)<br />
-![http://as3chat.googlecode.com/files/message.jpg](http://as3chat.googlecode.com/files/message.jpg)
-![http://as3chat.googlecode.com/files/4.jpg](http://as3chat.googlecode.com/files/4.jpg)
-![http://as3chat.googlecode.com/files/as3chat-update1.jpg](http://as3chat.googlecode.com/files/as3chat-update1.jpg)
-![http://as3chat.googlecode.com/files/as3chatdesktop1.jpg](http://as3chat.googlecode.com/files/as3chatdesktop1.jpg)
-![http://as3chat.googlecode.com/files/3.jpg](http://as3chat.googlecode.com/files/3.jpg)<br />
-http://as3chat.googlecode.com/files/client3.JPG
+![https://github.com/dreamsxin/as3chat/blob/master/image/arpg2.jpg](https://github.com/dreamsxin/as3chat/blob/master/image/arpg2.jpg?raw=true)
+
+![https://github.com/dreamsxin/as3chat/blob/master/image/message.jpg](https://github.com/dreamsxin/as3chat/blob/master/image/message.jpg?raw=true)
+
+![https://github.com/dreamsxin/as3chat/blob/master/image/4.jpg](https://github.com/dreamsxin/as3chat/blob/master/image/4.jpg?raw=true)
+
+![https://github.com/dreamsxin/as3chat/blob/master/image/as3chat-update1.jpg](https://github.com/dreamsxin/as3chat/blob/master/image/as3chat-update1.jpg?raw=true)
+
+![https://github.com/dreamsxin/as3chat/blob/master/image/as3chatdesktop1.jpg](https://github.com/dreamsxin/as3chat/blob/master/image/as3chatdesktop1.jpg?raw=true)
+
+![https://github.com/dreamsxin/as3chat/blob/master/image/3.jpg](https://github.com/dreamsxin/as3chat/blob/master/image/3.jpg?raw=true)
+
+![https://github.com/dreamsxin/as3chat/blob/master/image/client3.jpg](https://github.com/dreamsxin/as3chat/blob/master/image/client3.jpg?raw=true)
